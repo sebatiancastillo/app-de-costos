@@ -1,0 +1,29 @@
+{
+  "models": [
+    {
+      "title": "GPT-5 mini",
+      "provider": "openai",
+      "model": "gpt-5-mini",
+      "apiKey": "env:OPENAI_API_KEY"
+    },
+    {
+      "title": "GPT-4o mini",
+      "provider": "openai",
+      "model": "gpt-4o-mini",
+      "apiKey": "env:OPENAI_API_KEY"
+    },
+    {
+      "title": "Claude Haiku 4.5",
+      "provider": "anthropic",
+      "model": "claude-3-5-haiku",
+      "apiKey": "env:ANTHROPIC_API_KEY"
+    }
+  ],
+  "tabAutocompleteModel": "GPT-5 mini",
+  "slashCommands": {
+    "explain": "Claude Haiku 4.5",
+    "fix": "GPT-5 mini",
+    "test": "GPT-5 mini",
+    "refactor": "GPT-5 mini"
+  }
+}
