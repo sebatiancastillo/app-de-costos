@@ -1,0 +1,290 @@
+
+<h2 class="sr-only">Calculadora de costos de carpintería</h2>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--amber-50:#FAEEDA;--amber-100:#FAC775;--amber-200:#EF9F27;--amber-400:#BA7517;--amber-600:#854F0B;--amber-800:#633806;--teal-50:#E1F5EE;--teal-400:#1D9E75;--teal-600:#0F6E56;--gray-50:#F1EFE8;--gray-100:#D3D1C7;--gray-200:#B4B2A9;--gray-600:#5F5E5A}
+body{font-family:var(--font-sans,system-ui)}
+.app{padding:1.5rem 1rem 2rem;max-width:680px}
+.header{display:flex;align-items:center;gap:10px;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:0.5px solid var(--color-border-tertiary)}
+.logo{width:36px;height:36px;background:var(--amber-200);border-radius:var(--border-radius-md);display:flex;align-items:center;justify-content:center;color:var(--amber-800);font-size:18px}
+.header h1{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.header p{font-size:13px;color:var(--color-text-secondary)}
+.tabs{display:flex;gap:4px;margin-bottom:1.5rem;border-bottom:0.5px solid var(--color-border-tertiary);padding-bottom:0}
+.tab{padding:8px 16px;font-size:14px;background:none;border:none;border-bottom:2px solid transparent;color:var(--color-text-secondary);cursor:pointer;margin-bottom:-0.5px;transition:all .15s}
+.tab.active{color:var(--amber-400);border-bottom-color:var(--amber-200);font-weight:500}
+.tab:hover:not(.active){color:var(--color-text-primary)}
+.section{margin-bottom:1.5rem}
+.section-title{font-size:13px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:10px}
+.row{display:grid;gap:8px;margin-bottom:8px}
+.row-3{grid-template-columns:2fr 1fr 1fr auto}
+.row-2{grid-template-columns:1fr 1fr}
+input[type=text],input[type=number],select{width:100%;padding:8px 10px;font-size:14px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:var(--color-background-primary);color:var(--color-text-primary);outline:none}
+input:focus,select:focus{border-color:var(--amber-200);box-shadow:0 0 0 2px rgba(239,159,39,.15)}
+input::placeholder{color:var(--color-text-tertiary)}
+.btn{padding:8px 14px;font-size:13px;border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);background:transparent;color:var(--color-text-primary);cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .12s;white-space:nowrap}
+.btn:hover{background:var(--color-background-secondary)}
+.btn:active{transform:scale(.98)}
+.btn-primary{background:var(--amber-200);border-color:var(--amber-400);color:var(--amber-800);font-weight:500}
+.btn-primary:hover{background:var(--amber-100);border-color:var(--amber-200)}
+.btn-danger{border-color:transparent;color:var(--color-text-tertiary)}
+.btn-danger:hover{color:#E24B4A;background:transparent}
+.item-row{display:grid;grid-template-columns:2fr 1fr 1fr 60px auto;gap:8px;align-items:center;padding:8px 10px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);margin-bottom:6px;font-size:14px}
+.item-name{font-weight:500;color:var(--color-text-primary)}
+.item-val{color:var(--color-text-secondary);font-size:13px}
+.item-total{font-weight:500;color:var(--amber-400);text-align:right}
+.empty{text-align:center;padding:2rem;color:var(--color-text-tertiary);font-size:14px;border:0.5px dashed var(--color-border-tertiary);border-radius:var(--border-radius-lg)}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1rem}
+.metric{background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:14px 16px}
+.metric-label{font-size:12px;color:var(--color-text-secondary);margin-bottom:4px}
+.metric-value{font-size:22px;font-weight:500;color:var(--color-text-primary)}
+.metric-value.accent{color:var(--amber-400)}
+.metric-value.green{color:var(--teal-400)}
+.divider{height:0.5px;background:var(--color-border-tertiary);margin:1rem 0}
+.quote-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:1.25rem;margin-bottom:1rem}
+.quote-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1rem}
+.quote-title{font-size:16px;font-weight:500}
+.badge{font-size:11px;padding:3px 10px;border-radius:20px;background:var(--teal-50);color:var(--teal-600);font-weight:500}
+.quote-line{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:0.5px solid var(--color-border-tertiary);font-size:14px}
+.quote-line:last-child{border:none}
+.quote-line.total{font-weight:500;font-size:15px;padding-top:10px}
+.quote-line.profit{color:var(--teal-400)}
+.slider-wrap{display:flex;align-items:center;gap:12px;margin-bottom:1rem}
+.slider-wrap label{font-size:14px;color:var(--color-text-secondary);min-width:80px}
+.slider-wrap input[type=range]{flex:1}
+.slider-val{font-size:14px;font-weight:500;min-width:44px;text-align:right;color:var(--amber-400)}
+.add-row{display:grid;gap:8px}
+.add-row-4{grid-template-columns:2fr 1fr 1fr 1fr}
+</style>
+
+<div class="app" id="root"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+let state = {
+  tab: 0,
+  materiales: [],
+  manoObra: [],
+  gastos: [],
+  margen: 30,
+  iva: 19,
+  incluirIva: false,
+  proyecto: '',
+  cliente: '',
+  matForm: {nombre:'',cantidad:1,unidad:'unidad',precio:0},
+  moForm: {descripcion:'',horas:1,tarifa:25000},
+  gaForm: {descripcion:'',valor:0},
+};
+
+const fmt = n => Number(n).toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0});
+const num = v => parseFloat(v)||0;
+
+function totalMat(){return state.materiales.reduce((a,i)=>a+i.cantidad*i.precio,0)}
+function totalMO(){return state.manoObra.reduce((a,i)=>a+i.horas*i.tarifa,0)}
+function totalGa(){return state.gastos.reduce((a,i)=>a+i.valor,0)}
+function costoBase(){return totalMat()+totalMO()+totalGa()}
+function ganancia(){return costoBase()*state.margen/100}
+function subtotal(){return costoBase()+ganancia()}
+function ivaVal(){return state.incluirIva?subtotal()*state.iva/100:0}
+function total(){return subtotal()+ivaVal()}
+
+function render(){
+  const t = state.tab;
+  $('root').innerHTML = `
+  <div class="header">
+    <div class="logo"><i class="ti ti-hammer" aria-hidden="true"></i></div>
+    <div>
+      <h1>Costos Carpintería</h1>
+      <p>Calcula y genera cotizaciones profesionales</p>
+    </div>
+  </div>
+  <div class="tabs">
+    <button class="tab ${t===0?'active':''}" onclick="setTab(0)"><i class="ti ti-package" aria-hidden="true"></i> Materiales</button>
+    <button class="tab ${t===1?'active':''}" onclick="setTab(1)"><i class="ti ti-users" aria-hidden="true"></i> Mano de obra</button>
+    <button class="tab ${t===2?'active':''}" onclick="setTab(2)"><i class="ti ti-receipt" aria-hidden="true"></i> Gastos</button>
+    <button class="tab ${t===3?'active':''}" onclick="setTab(3)"><i class="ti ti-file-invoice" aria-hidden="true"></i> Cotización</button>
+  </div>
+  ${t===0?renderMat():t===1?renderMO():t===2?renderGa():renderCot()}
+  `;
+}
+
+function renderMat(){
+  const f = state.matForm;
+  return `
+  <div class="section">
+    <div class="section-title">Agregar material</div>
+    <div class="row add-row-4" style="margin-bottom:8px">
+      <input id="mNom" type="text" placeholder="Nombre del material" value="${f.nombre}" oninput="mf('nombre',this.value)">
+      <input id="mCant" type="number" min="0.01" step="0.01" placeholder="Cantidad" value="${f.cantidad}" oninput="mf('cantidad',this.value)">
+      <select oninput="mf('unidad',this.value)">
+        ${['unidad','m²','ml','kg','litro','vara','tabla','rollo'].map(u=>`<option ${f.unidad===u?'selected':''}>${u}</option>`).join('')}
+      </select>
+      <input id="mPre" type="number" min="0" placeholder="Precio unit." value="${f.precio||''}" oninput="mf('precio',this.value)">
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-bottom:1rem">
+      <button class="btn btn-primary" onclick="addMat()"><i class="ti ti-plus" aria-hidden="true"></i> Agregar</button>
+    </div>
+  </div>
+  <div class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="section-title" style="margin:0">Lista de materiales</div>
+      ${state.materiales.length?`<span style="font-size:13px;color:var(--amber-400);font-weight:500">Total: ${fmt(totalMat())}</span>`:''}
+    </div>
+    ${state.materiales.length===0?`<div class="empty"><i class="ti ti-stack-2" aria-hidden="true" style="font-size:24px;display:block;margin-bottom:8px"></i>Sin materiales aún</div>`:''}
+    ${state.materiales.map((m,i)=>`
+    <div class="item-row">
+      <span class="item-name">${m.nombre}</span>
+      <span class="item-val">${m.cantidad} ${m.unidad}</span>
+      <span class="item-val">${fmt(m.precio)}</span>
+      <span class="item-total">${fmt(m.cantidad*m.precio)}</span>
+      <button class="btn btn-danger" onclick="delItem('materiales',${i})" aria-label="Eliminar"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderMO(){
+  const f = state.moForm;
+  return `
+  <div class="section">
+    <div class="section-title">Agregar tarea</div>
+    <div class="row" style="grid-template-columns:2fr 1fr 1fr auto;margin-bottom:8px">
+      <input type="text" placeholder="Descripción (ej: Ensamble)" value="${f.descripcion}" oninput="mof('descripcion',this.value)">
+      <input type="number" min="0.5" step="0.5" placeholder="Horas" value="${f.horas}" oninput="mof('horas',this.value)">
+      <input type="number" min="0" placeholder="Tarifa/hora" value="${f.tarifa||''}" oninput="mof('tarifa',this.value)">
+      <button class="btn btn-primary" onclick="addMO()"><i class="ti ti-plus" aria-hidden="true"></i></button>
+    </div>
+  </div>
+  <div class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="section-title" style="margin:0">Tareas de mano de obra</div>
+      ${state.manoObra.length?`<span style="font-size:13px;color:var(--amber-400);font-weight:500">Total: ${fmt(totalMO())}</span>`:''}
+    </div>
+    ${state.manoObra.length===0?`<div class="empty"><i class="ti ti-tools" aria-hidden="true" style="font-size:24px;display:block;margin-bottom:8px"></i>Sin tareas aún</div>`:''}
+    ${state.manoObra.map((m,i)=>`
+    <div class="item-row">
+      <span class="item-name">${m.descripcion}</span>
+      <span class="item-val">${m.horas}h</span>
+      <span class="item-val">${fmt(m.tarifa)}/h</span>
+      <span class="item-total">${fmt(m.horas*m.tarifa)}</span>
+      <button class="btn btn-danger" onclick="delItem('manoObra',${i})" aria-label="Eliminar"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderGa(){
+  const f = state.gaForm;
+  return `
+  <div class="section">
+    <div class="section-title">Agregar gasto adicional</div>
+    <div class="row" style="grid-template-columns:2fr 1fr auto;margin-bottom:8px">
+      <input type="text" placeholder="Descripción (ej: Transporte)" value="${f.descripcion}" oninput="gaf('descripcion',this.value)">
+      <input type="number" min="0" placeholder="Valor" value="${f.valor||''}" oninput="gaf('valor',this.value)">
+      <button class="btn btn-primary" onclick="addGa()"><i class="ti ti-plus" aria-hidden="true"></i></button>
+    </div>
+  </div>
+  <div class="section">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div class="section-title" style="margin:0">Gastos adicionales</div>
+      ${state.gastos.length?`<span style="font-size:13px;color:var(--amber-400);font-weight:500">Total: ${fmt(totalGa())}</span>`:''}
+    </div>
+    ${state.gastos.length===0?`<div class="empty"><i class="ti ti-receipt-off" aria-hidden="true" style="font-size:24px;display:block;margin-bottom:8px"></i>Sin gastos adicionales</div>`:''}
+    ${state.gastos.map((g,i)=>`
+    <div class="item-row" style="grid-template-columns:2fr 1fr 60px auto">
+      <span class="item-name">${g.descripcion}</span>
+      <span></span>
+      <span class="item-total" style="grid-column:3">${fmt(g.valor)}</span>
+      <button class="btn btn-danger" onclick="delItem('gastos',${i})" aria-label="Eliminar"><i class="ti ti-x" aria-hidden="true"></i></button>
+    </div>`).join('')}
+  </div>`;
+}
+
+function renderCot(){
+  const cb=costoBase(),gan=ganancia(),sub=subtotal(),iv=ivaVal(),tot=total();
+  return `
+  <div class="section">
+    <div class="section-title">Datos del proyecto</div>
+    <div class="row row-2" style="margin-bottom:8px">
+      <input type="text" placeholder="Nombre del proyecto" value="${state.proyecto}" oninput="state.proyecto=this.value">
+      <input type="text" placeholder="Cliente" value="${state.cliente}" oninput="state.cliente=this.value">
+    </div>
+  </div>
+  <div class="summary-grid">
+    <div class="metric"><div class="metric-label">Materiales</div><div class="metric-value">${fmt(totalMat())}</div></div>
+    <div class="metric"><div class="metric-label">Mano de obra</div><div class="metric-value">${fmt(totalMO())}</div></div>
+    <div class="metric"><div class="metric-label">Otros gastos</div><div class="metric-value">${fmt(totalGa())}</div></div>
+    <div class="metric"><div class="metric-label">Costo base</div><div class="metric-value accent">${fmt(cb)}</div></div>
+  </div>
+  <div class="section">
+    <div class="section-title">Configurar márgenes</div>
+    <div class="slider-wrap">
+      <label>Ganancia</label>
+      <input type="range" min="0" max="100" step="1" value="${state.margen}" oninput="state.margen=+this.value;render()">
+      <span class="slider-val">${state.margen}%</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:0.5rem">
+      <label style="font-size:14px;color:var(--color-text-secondary);display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" ${state.incluirIva?'checked':''} onchange="state.incluirIva=this.checked;render()"> Incluir IVA (${state.iva}%)
+      </label>
+    </div>
+  </div>
+  <div class="quote-card">
+    <div class="quote-header">
+      <div>
+        <div class="quote-title">${state.proyecto||'Sin nombre'}</div>
+        <div style="font-size:13px;color:var(--color-text-secondary);margin-top:2px">${state.cliente||'Cliente'} · ${new Date().toLocaleDateString('es-CO')}</div>
+      </div>
+      <span class="badge">Cotización</span>
+    </div>
+    ${state.materiales.length?`<div class="quote-line"><span style="color:var(--color-text-secondary)">Materiales</span><span>${fmt(totalMat())}</span></div>`:''}
+    ${state.manoObra.length?`<div class="quote-line"><span style="color:var(--color-text-secondary)">Mano de obra</span><span>${fmt(totalMO())}</span></div>`:''}
+    ${state.gastos.length?`<div class="quote-line"><span style="color:var(--color-text-secondary)">Otros gastos</span><span>${fmt(totalGa())}</span></div>`:''}
+    <div class="quote-line profit"><span>Ganancia (${state.margen}%)</span><span>+${fmt(gan)}</span></div>
+    ${state.incluirIva?`<div class="quote-line"><span style="color:var(--color-text-secondary)">IVA (${state.iva}%)</span><span>+${fmt(iv)}</span></div>`:''}
+    <div class="quote-line total"><span>Total</span><span style="color:var(--amber-400);font-size:18px">${fmt(tot)}</span></div>
+  </div>
+  <div style="display:flex;gap:8px;justify-content:flex-end">
+    <button class="btn" onclick="resetAll()"><i class="ti ti-refresh" aria-hidden="true"></i> Nueva cotización</button>
+    <button class="btn btn-primary" onclick="copiarCot()"><i class="ti ti-copy" aria-hidden="true"></i> Copiar resumen</button>
+  </div>`;
+}
+
+window.setTab=t=>{state.tab=t;render()};
+window.mf=(k,v)=>{state.matForm[k]=k==='nombre'?v:num(v)||v;};
+window.mof=(k,v)=>{state.moForm[k]=k==='descripcion'?v:num(v)||v;};
+window.gaf=(k,v)=>{state.gaForm[k]=k==='descripcion'?v:num(v)||v;};
+window.delItem=(list,i)=>{state[list].splice(i,1);render()};
+
+window.addMat=()=>{
+  const f=state.matForm;
+  if(!f.nombre||!f.precio){alert('Completa nombre y precio');return;}
+  state.materiales.push({...f,cantidad:num(f.cantidad),precio:num(f.precio)});
+  state.matForm={nombre:'',cantidad:1,unidad:f.unidad,precio:0};
+  render();
+};
+window.addMO=()=>{
+  const f=state.moForm;
+  if(!f.descripcion||!f.tarifa){alert('Completa descripción y tarifa');return;}
+  state.manoObra.push({...f,horas:num(f.horas),tarifa:num(f.tarifa)});
+  state.moForm={descripcion:'',horas:1,tarifa:f.tarifa};
+  render();
+};
+window.addGa=()=>{
+  const f=state.gaForm;
+  if(!f.descripcion||!f.valor){alert('Completa descripción y valor');return;}
+  state.gastos.push({...f,valor:num(f.valor)});
+  state.gaForm={descripcion:'',valor:0};
+  render();
+};
+window.resetAll=()=>{
+  if(confirm('¿Limpiar todo y empezar nueva cotización?')){
+    state={...state,materiales:[],manoObra:[],gastos:[],proyecto:'',cliente:'',margen:30,incluirIva:false};
+    render();
+  }
+};
+window.copiarCot=()=>{
+  const tot=total(),gan=ganancia();
+  const txt=`COTIZACIÓN - ${state.proyecto||'Proyecto'}\nCliente: ${state.cliente||'—'}\nFecha: ${new Date().toLocaleDateString('es-CO')}\n\nMateriales: ${Number(totalMat()).toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0})}\nMano de obra: ${Number(totalMO()).toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0})}\nOtros gastos: ${Number(totalGa()).toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0})}\nGanancia (${state.margen}%): +${Number(gan).toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0})}${state.incluirIva?`\nIVA (${state.iva}%): +${Number(ivaVal()).toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0})}`:''}  \n\nTOTAL: ${Number(tot).toLocaleString('es-CO',{style:'currency',currency:'COP',maximumFractionDigits:0})}`;
+  navigator.clipboard.writeText(txt).then(()=>alert('¡Resumen copiado al portapapeles!')).catch(()=>alert('No se pudo copiar'));
+};
+
+render();
+</script>

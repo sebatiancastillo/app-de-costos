@@ -1,14 +1,146 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>vikingos — Dashboard</title>
+  <link rel="stylesheet" href="styles/estilos.css"/>  
 </head>
 <body>
-    <a href="">
-        <h1>app de costoss</h1>
-    </a>
-    
+<div class="app-layout">
+
+  <!-- SIDEBAR (renderizado por navbar.js) -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- MAIN -->
+  <main class="main-area">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Panel Principal</div>
+        <div class="page-sub" id="dashSubtitulo">Cargando...</div>                
+      </div>
+      <div class="topbar-actions">
+        <a href="views/cotizar.html" class="btn btn-primary">+ Nueva Cotización</a>
+      </div>
+    </div>
+
+    <div class="content" id="dashboardRoot">
+
+      <!-- STATS -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div class="stat-lbl">Proyectos</div>
+          <div class="stat-val" id="statProyectos">—</div>
+          <div class="stat-sub">cotizaciones guardadas</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Valor Total</div>
+          <div class="stat-val stat-val-lg" id="statValor">—</div>
+          <div class="stat-sub">suma de cotizaciones</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Margen Promedio</div>
+          <div class="stat-val" id="statMargen">—</div>
+          <div class="stat-sub">rentabilidad promedio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Último Proyecto</div>
+          <div class="stat-val" style="font-size:14px;padding-top:4px;" id="statUltimoNombre">—</div>
+          <div class="stat-sub" id="statUltimaFecha">—</div>
+        </div>
+      </div>
+
+      <!-- GRILLA PRINCIPAL -->
+      <div class="dash-grid">
+
+        <!-- Tabla recientes -->
+        <div class="section">
+          <div class="section-title">📋 Proyectos Recientes</div>
+          <div style="overflow-x:auto;">
+            <table class="rec-table">
+              <thead>
+                <tr>
+                  <th>Proyecto</th>
+                  <th>Categoría</th>
+                  <th>Tamaño</th>
+                  <th>Precio Final</th>
+                  <th>Fecha</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="tablaRecientes">
+                <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">Cargando...</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div style="margin-top:16px;">
+            <a href="views/proyectos.html" class="btn btn-ghost btn-sm">Ver galería completa →</a>
+          </div>
+        </div>
+
+        <!-- Acciones rápidas -->
+        <div>
+          <div class="section">
+            <div class="section-title">🚀 Acciones Rápidas</div>
+            <div class="quick-actions">
+              <a href="views/cotizar.html" class="quick-btn">
+                <div class="quick-btn-icon">✏️</div>
+                <div class="quick-btn-text">
+                  <div class="quick-btn-label">Nueva Cotización</div>
+                  <div class="quick-btn-sub">Calcular precio de un mueble</div>
+                </div>
+                <span class="quick-btn-arrow">→</span>
+              </a>
+              <a href="views/proyectos.html" class="quick-btn">
+                <div class="quick-btn-icon">🪑</div>
+                <div class="quick-btn-text">
+                  <div class="quick-btn-label">Galería de Muebles</div>
+                  <div class="quick-btn-sub">Ver proyectos cotizados</div>
+                </div>
+                <span class="quick-btn-arrow">→</span>
+              </a>
+              <a href="views/materiales.html" class="quick-btn">
+                <div class="quick-btn-icon">📦</div>
+                <div class="quick-btn-text">
+                  <div class="quick-btn-label">Catálogo Materiales</div>
+                  <div class="quick-btn-sub">Gestionar precios y stock</div>
+                </div>
+                <span class="quick-btn-arrow">→</span>
+              </a>
+              <a href="views/ajustes.html" class="quick-btn">
+                <div class="quick-btn-icon">⚙️</div>
+                <div class="quick-btn-text">
+                  <div class="quick-btn-label">Ajustes</div>
+                  <div class="quick-btn-sub">Tarifa de mano de obra, margen</div>
+                </div>
+                <span class="quick-btn-arrow">→</span>
+              </a>
+            </div>
+
+            <div class="tip-card">
+              <div class="tip-title">💡 Consejo del día</div>
+              <div class="tip-text">
+                Define bien tu tarifa de mano de obra antes de cotizar. Suma tus gastos fijos mensuales y divídelos entre las horas que trabajas al mes.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /dash-grid -->
+    </div><!-- /content -->
+  </main>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Scripts -->
+<script src="config/routes.js"></script>
+<script src="components/navbar.js"></script>
+<script src="main.js"></script>
+<script>
+  renderSidebar('dashboard');
+  
+</script>
 </body>
 </html>

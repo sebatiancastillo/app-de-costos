@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Artemadera — Piezas en madera artesanales | Medellín</title>
+  <meta name="description" content="Piezas decorativas y funcionales en madera artesanal. Marcos, repisas, accesorios y muebles personalizados. Envíos a toda Colombia.">
+  <meta property="og:title" content="Artemadera — Piezas en madera artesanales">
+  <meta property="og:description" content="Piezas únicas hechas a mano en madera. Personalizamos tu pedido.">
+  <meta property="og:type" content="website">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="../styles/estilos.css">
+  <link rel="stylesheet" href="../styles/catalogo.css">
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar" id="navbar">
+  <div class="nav-inner">
+    <a href="#" class="logo"><i class="fas fa-tree" style="font-size:.9em;color:var(--accent)"></i> <span class="logo-dot">Vikingosc</span></a>
+    <ul class="nav-links">
+      <li><a href="#">Inicio</a></li>
+      <li><a href="#tienda">Tienda</a></li>
+      <li><a href="#cotizador">Cotizador</a></li>
+      <li><a href="#resenas">Reseñas</a></li>
+      <li><a href="#nosotros">Nosotros</a></li>
+      <li><a href="../../index.html">dashboard</a></li>
+    </ul>
+    <div class="nav-actions">
+      <button class="btn-login" id="loginBtn" onclick="openLogin()">
+        <i class="fab fa-google"></i> Ingresar
+      </button>
+      <div class="user-pill" id="userPill">
+        <img id="userImg" src="" alt="">
+        <span id="userName"></span>
+      </div>
+      <button class="cart-btn" onclick="openCart()">
+        <i class="fas fa-shopping-bag"></i>
+        <span class="cart-badge" id="cartBadge">0</span>
+      </button>
+      <button class="hamburger" id="ham" onclick="toggleMenu()">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <a href="#" onclick="toggleMenu()">Inicio</a>
+  <a href="#tienda" onclick="toggleMenu()">Tienda</a>
+  <a href="#cotizador" onclick="toggleMenu()">Cotizador</a>
+  <a href="#resenas" onclick="toggleMenu()">Reseñas</a>
+  <a href="#nosotros" onclick="toggleMenu()">Nosotros</a>
+</div>
+
+<!-- HERO CAROUSEL -->
+<section class="hero">
+  <div class="slides-track" id="track">
+    <div class="slide">
+      <img src="https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1600&q=80" alt="Madera artesanal">
+      <div class="slide-overlay">
+        <p class="slide-tag">Hecho a mano · Medellín</p>
+        <h1 class="slide-title">Madera que cuenta historias</h1>
+        <p class="slide-desc">Piezas decorativas únicas elaboradas con maderas seleccionadas. Cada veta, irrepetible.</p>
+        <a href="#tienda" class="btn-hero"><i class="fas fa-arrow-right"></i> Ver catálogo</a>
+      </div>
+    </div>
+    <div class="slide">
+      <img src="https://images.unsplash.com/photo-1542621334-a254cf47733d?w=1600&q=80" alt="Taller carpintería">
+      <div class="slide-overlay">
+        <p class="slide-tag">Piezas personalizadas</p>
+        <h1 class="slide-title">Tu diseño en madera real</h1>
+        <p class="slide-desc">Dimensiones a la medida, tipo de madera y acabado a tu elección. Cotiza gratis.</p>
+        <a href="#cotizador" class="btn-hero"><i class="fas fa-calculator"></i> Cotizar ahora</a>
+      </div>
+    </div>
+    <div class="slide">
+      <img src="https://images.unsplash.com/photo-1504148455328-c376907d081c?w=1600&q=80" alt="Piezas decorativas">
+      <div class="slide-overlay">
+        <p class="slide-tag">Envíos a toda Colombia</p>
+        <h1 class="slide-title">Arte en cada rincón de tu hogar</h1>
+        <p class="slide-desc">Marcos, repisas, accesorios y más. Embalaje especial para que lleguen perfectas.</p>
+        <a href="#tienda" class="btn-hero"><i class="fas fa-arrow-right"></i> Comprar ahora</a>
+      </div>
+    </div>
+  </div>
+  <button class="carousel-arrow prev" onclick="prevSlide()"><i class="fas fa-chevron-left"></i></button>
+  <button class="carousel-arrow next" onclick="nextSlide()"><i class="fas fa-chevron-right"></i></button>
+  <div class="carousel-dots" id="dots"></div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="how-inner">
+    <h2 class="how-title">¿Cómo funciona?</h2>
+    <p class="how-sub">Comprar es sencillo, seguro y personalizado</p>
+    <div class="how-steps">
+      <div class="how-step">
+        <div class="how-icon"><i class="fas fa-search"></i></div>
+        <h4>1. Elige tu pieza</h4>
+        <p>Explora el catálogo o usa el cotizador para una pieza personalizada</p>
+      </div>
+      <div class="how-step">
+        <div class="how-icon"><i class="fab fa-whatsapp"></i></div>
+        <h4>2. Confirma por WhatsApp</h4>
+        <p>Un asesor te confirma disponibilidad, detalles de color y medidas</p>
+      </div>
+      <div class="how-step">
+        <div class="how-icon"><i class="fas fa-credit-card"></i></div>
+        <h4>3. Paga de forma segura</h4>
+        <p>Nequi, Bancolombia, efectivo o transferencia — tú eliges</p>
+      </div>
+      <div class="how-step">
+        <div class="how-icon"><i class="fas fa-box-open"></i></div>
+        <h4>4. Recibe en casa</h4>
+        <p>Embalaje especial para madera. Envíos a toda Colombia en 3–7 días</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STORE -->
+<section class="store" id="tienda">
+  <div class="section-head">
+    <p class="section-tag">Catálogo completo</p>
+    <h2 class="section-title">Nuestras piezas</h2>
+  </div>
+  <div class="cats" id="cats"></div>
+  <div class="grid" id="grid"></div>
+</section>
+
+<!-- COTIZADOR -->
+<section class="quote-sec" id="cotizador">
+  <div class="quote-inner">
+    <div class="section-head">
+      <p class="section-tag">Personaliza tu pedido</p>
+      <h2 class="section-title">Cotizador de piezas</h2>
+    </div>
+    <div class="quote-box">
+      <p style="color:var(--muted);font-size:.9rem;">Obtén un precio estimado para tu pieza personalizada. El asesor confirmará el valor final.</p>
+      <div class="qform">
+        <div class="qf">
+          <label>Tipo de pieza</label>
+          <select id="qPieza" onchange="calcQuote()">
+            <option value="">Seleccionar...</option>
+            <option value="marco">Marco decorativo</option>
+            <option value="repisa">Repisa</option>
+            <option value="bandeja">Bandeja de madera</option>
+            <option value="portallaves">Porta llaves</option>
+            <option value="mesa">Mesa pequeña</option>
+            <option value="personalizado">Diseño personalizado</option>
+          </select>
+        </div>
+        <div class="qf">
+          <label>Tipo de madera</label>
+          <select id="qMadera" onchange="calcQuote()">
+            <option value="">Seleccionar...</option>
+            <option value="pino">Pino (económico)</option>
+            <option value="cedro">Cedro (intermedio)</option>
+            <option value="nogal">Nogal (premium)</option>
+            <option value="roble">Roble (premium+)</option>
+          </select>
+        </div>
+        <div class="qf">
+          <label>Ancho (cm)</label>
+          <input type="number" id="qAncho" placeholder="ej. 40" min="5" max="200" oninput="calcQuote()">
+        </div>
+        <div class="qf">
+          <label>Alto / Largo (cm)</label>
+          <input type="number" id="qAlto" placeholder="ej. 60" min="5" max="300" oninput="calcQuote()">
+        </div>
+        <div class="qf">
+          <label>Acabado</label>
+          <select id="qAcabado" onchange="calcQuote()">
+            <option value="">Seleccionar...</option>
+            <option value="natural">Natural (sin acabado)</option>
+            <option value="cera">Cera de abejas</option>
+            <option value="barniz">Barniz brillante</option>
+            <option value="teñido">Teñido + barniz</option>
+            <option value="epoxica">Resina epóxica</option>
+          </select>
+        </div>
+        <div class="qf">
+          <label>Cantidad</label>
+          <input type="number" id="qQty" placeholder="1" min="1" max="100" value="1" oninput="calcQuote()">
+        </div>
+        <div class="quote-result" id="quoteResult">
+          <p class="qr-label">Precio estimado</p>
+          <div class="qr-price" id="qrPrice">$0</div>
+          <p class="qr-note">⏱ Tiempo de producción estimado: <span id="qrTime">—</span></p>
+        </div>
+        <button class="btn-quote" onclick="calcQuote()"><i class="fas fa-calculator"></i> Calcular precio</button>
+        <button class="btn-quote-wa" id="btnQuoteWa" onclick="sendQuoteWa()">
+          <i class="fab fa-whatsapp" style="font-size:1.1rem"></i> Solicitar cotización por WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section class="reviews-sec" id="resenas">
+  <div class="reviews-inner">
+    <div class="section-head">
+      <p class="section-tag">Lo que dicen nuestros clientes</p>
+      <h2 class="section-title">Reseñas verificadas</h2>
+    </div>
+    <div class="reviews-grid" id="reviewsGrid"></div>
+    <div class="review-form" id="reviewForm"></div>
+  </div>
+</section>
+
+<!-- CART -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-panel" id="cartPanel">
+  <div class="cp-head">
+    <div class="cp-title"><i class="fas fa-shopping-bag"></i> Mi carrito</div>
+    <button class="cp-close" onclick="closeCart()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="cp-body" id="cpBody"></div>
+  <div class="cp-foot" id="cpFoot">
+    <div class="cp-total">
+      <span class="cp-total-label">Total estimado</span>
+      <span class="cp-total-amount" id="cpTotal">$0</span>
+    </div>
+    <button class="btn-wa" onclick="checkout()">
+      <i class="fab fa-whatsapp" style="font-size:1.15rem"></i> Finalizar pedido por WhatsApp
+    </button>
+    <p class="policy-link">
+      Al comprar aceptas nuestra
+      <button onclick="openPolicy()">política de cambios y garantía</button>
+    </p>
+  </div>
+</div>
+
+<!-- PRODUCT DETAIL MODAL -->
+<div class="modal-bg" id="productModal">
+  <div class="pmodal" id="pmodalInner" style="position:relative;">
+    <button class="pm-close" onclick="closeProductModal()"><i class="fas fa-times"></i></button>
+    <div class="pm-img" id="pmImg"></div>
+    <div class="pm-body" id="pmBody"></div>
+  </div>
+</div>
+
+<!-- POLICY MODAL -->
+<div class="modal-bg" id="policyModal">
+  <div class="small-modal">
+    <h3><i class="fas fa-shield-alt" style="color:var(--accent);margin-right:.4rem"></i> Política de cambios y garantía</h3>
+    <ul>
+      <li>Aceptamos cambios dentro de los <strong>7 días</strong> posteriores a la entrega</li>
+      <li>Si la pieza llega dañada, la reponemos sin costo adicional</li>
+      <li>Las piezas personalizadas no tienen cambio salvo defecto de fabricación</li>
+      <li>El color puede variar ligeramente respecto a la foto por la veta natural de la madera</li>
+      <li>Garantía de <strong>6 meses</strong> contra defectos estructurales</li>
+      <li>Para iniciar un cambio, contáctanos por WhatsApp con foto del producto</li>
+    </ul>
+    <button class="sm-close" onclick="closePolicy()">Entendido</button>
+  </div>
+</div>
+
+<!-- LOGIN MODAL -->
+<div class="modal-bg" id="loginModal">
+  <div class="login-modal">
+    <div class="modal-logo">Arte<span style="color:var(--accent)">madera</span></div>
+    <p class="modal-sub">Inicia sesión con Google para dejar tu reseña</p>
+    <button class="btn-google" onclick="doGoogleLogin()">
+      <svg width="19" height="19" viewBox="0 0 24 24">
+        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+      </svg>
+      Continuar con Google
+    </button>
+    <button class="modal-cancel" onclick="closeLogin()">Cancelar</button>
+  </div>
+</div>
+
+<!-- WA FLOAT -->
+<a class="wa-float" href="https://wa.me/573007354244?text=Hola%2C%20me%20interesa%20una%20pieza%20de%20madera%20🪵" target="_blank" title="Chatea con nosotros">
+  <i class="fab fa-whatsapp"></i>
+</a>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="f-brand">
+      <a href="#" class="logo"><i class="fas fa-tree" style="font-size:.85em;color:var(--accent)"></i> Artemadera</a>
+      <p>Piezas en madera hechas a mano en Medellín. Cada pieza lleva el cuidado y la pasión de nuestro taller.</p>
+    </div>
+    <div class="f-col">
+      <h4>Tienda</h4>
+      <ul>
+        <li><a href="#">Marcos decorativos</a></li>
+        <li><a href="#">Repisas</a></li>
+        <li><a href="#">Accesorios</a></li>
+        <li><a href="#">Mesas</a></li>
+        <li><a href="#">Personalizados</a></li>
+      </ul>
+    </div>
+    <div class="f-col" id="nosotros">
+      <h4>Nosotros</h4>
+      <ul>
+        <li><a href="#">Nuestro taller</a></li>
+        <li><a href="#">Tipos de madera</a></li>
+        <li><a href="#">Proceso de fabricación</a></li>
+        <li><a href="#">Blog</a></li>
+      </ul>
+    </div>
+    <div class="f-col">
+      <h4>Ayuda</h4>
+      <ul>
+        <li><a href="#" onclick="openPolicy()">Política de cambios</a></li>
+        <li><a href="#">Cómo comprar</a></li>
+        <li><a href="#">Tiempos de entrega</a></li>
+        <li><a href="#">Preguntas frecuentes</a></li>
+        <li><a href="#">WhatsApp</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bar">
+    <span>&copy; 2026 Artemadera. Todos los derechos reservados.</span>
+    <div class="socials">
+      <a href="#"><i class="fab fa-instagram"></i></a>
+      <a href="#"><i class="fab fa-facebook"></i></a>
+      <a href="https://wa.me/573007354244" target="_blank"><i class="fab fa-whatsapp"></i></a>
+      <a href="#"><i class="fab fa-tiktok"></i></a>
+    </div>
+  </div>
+</footer>
+
+<script src="../Js/catalogoo.js"></script>
+</body>
+</html>

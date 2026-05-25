@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vikingos — Galería de Muebles</title>
+  <link rel="stylesheet" href="../styles/estilos.css"/>
+  <link rel="stylesheet" href="../styles/cotizacion.css"/>
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <!-- MAIN -->
+  <main class="main-area">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Galería de Muebles</div>
+        <div class="page-sub" id="subtitulo">Cargando proyectos...</div>
+      </div>
+      <div class="topbar-actions">
+        <a href="cotizar.html" class="btn btn-primary">+ Nueva Cotización</a>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="g-filters" id="filtros">
+        <span style="font-size:12px;color:var(--muted);">Filtrar:</span>
+        <div class="f-chip active" data-cat="todos" onclick="filtrar(this)">🗂 Todos</div>
+      </div>
+      <div id="galeriaContainer"></div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../config/routes.js"></script>
+<script src="../components/navbar.js"></script>
+<script>
+  renderSidebar('proyectos');
+
+  const CAT_ICON = {closet:'🗄️',mesa:'🪑',cocina:'🍳',puerta:'🚪',cama:'🛏️',escritorio:'💼',otro:'📦'};
+  const SIZES    = {pequeño:'Pequeño',mediano:'Mediano',grande:'Grande',set:'Set / Conjunto'};
+  const fmt = n => '$ ' + Math.round(n).toLocaleString('es-CO');
+
+  let proyectos = [];
+  let filtroActual = 'todos';
+
+  function cargar() {
+    proyectos = JSON.parse(localStorage.getItem('cotipro_proyectos') || '[]');
+
+    if (proyectos.length === 0) {
+      proyectos = [
+        {id:1,projectName:'Closet Empotrado 3 Puertas',client:'Familia Martínez',category:'closet',
+         size:'grande',date:'2025-03-10',width:'240',height:'220',depth:'60',
+         color:'#b08040',colorName:'Roble',deliveryDays:'20',total:1850000,margin:35},
+        {id:2,projectName:'Mesa de Comedor 6 Puestos',client:'Restaurante El Patio',category:'mesa',
+         size:'grande',date:'2025-03-18',width:'180',height:'75',depth:'90',
+         color:'#d4a96a',colorName:'Pino',deliveryDays:'10',total:980000,margin:28},
+        {id:3,projectName:'Cocina Integral Set',client:'Nuevo Apto Pedraza',category:'cocina',
+         size:'set',date:'2025-03-21',width:'320',height:'90',depth:'60',
+         color:'#f0ede8',colorName:'Blanco',deliveryDays:'30',total:4200000,margin:32},
+      ];
+    }
+
+    const cats = [...new Set(proyectos.map(p=>p.category))];
+    const filtrosEl = document.getElementById('filtros');
+    filtrosEl.querySelectorAll('[data-cat]:not([data-cat=todos])').forEach(el=>el.remove());
+    cats.forEach(c=>{
+      const chip = document.createElement('div');
+      chip.className='f-chip';
+      chip.dataset.cat=c;
+      chip.innerHTML=`${CAT_ICON[c]||'📦'} ${c.charAt(0).toUpperCase()+c.slice(1)}`;
+      chip.onclick=function(){filtrar(this);};
+      filtrosEl.appendChild(chip);
+    });
+
+    document.getElementById('subtitulo').textContent=`${proyectos.length} mueble${proyectos.length!==1?'s':''} cotizado${proyectos.length!==1?'s':''}`;
+    renderGaleria();
+  }
+
+  function filtrar(el) {
+    document.querySelectorAll('.f-chip').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    filtroActual = el.dataset.cat;
+    renderGaleria();
+  }
+
+  function renderGaleria() {
+    const lista = filtroActual==='todos' ? proyectos : proyectos.filter(p=>p.category===filtroActual);
+    const cont = document.getElementById('galeriaContainer');
+
+    if (lista.length===0) {
+      cont.innerHTML=`
+        <div class="empty-state">
+          <div class="empty-icon">🪑</div>
+          <div class="empty-title">Sin muebles en esta categoría</div>
+          <div class="empty-sub">Crea cotizaciones para verlas aquí</div>
+          <br/><a href="cotizar.html" class="btn btn-primary" style="margin-top:16px;">+ Nueva Cotización</a>
+        </div>`;
+      return;
+    }
+
+    const grid = document.createElement('div');
+    grid.className='g-grid';
+
+    lista.forEach(p => {
+      const hasMedidas = p.width||p.height||p.depth;
+      const card = document.createElement('div');
+      card.className='g-card';
+      card.innerHTML=`
+        <div class="g-img">
+          <span class="g-ph">${CAT_ICON[p.category]||'📦'}</span>
+          <span class="g-badge">${SIZES[p.size]||p.size||'—'}</span>
+        </div>
+        <div class="g-body">
+          <div class="g-name">${p.projectName}</div>
+          <div class="g-client">👤 ${p.client||'Sin cliente'}</div>
+          <div class="g-specs">
+            ${hasMedidas?`<span class="spec">📐 ${p.width||'?'}×${p.height||'?'}×${p.depth||'?'} cm</span>`:''}
+            ${p.color?`<span class="spec"><span class="dot" style="background:${p.color}"></span>${p.colorName||''}</span>`:''}
+            <span class="spec">${CAT_ICON[p.category]||''} ${p.category}</span>
+          </div>
+          ${p.deliveryDays?`<div class="g-delivery">🚚 Entrega en ${p.deliveryDays} días hábiles</div>`:''}
+          <div class="g-price-row">
+            <div class="g-price">${fmt(p.total||0)}</div>
+            <div class="g-mrg">+${p.margin||0}% margen</div>
+          </div>
+          <div class="g-actions">
+            <a href="cotizar.html?id=${p.id}" class="btn btn-ghost btn-sm">✏️ Editar</a>
+            <button class="btn btn-danger btn-sm" onclick="eliminar(${p.id})">🗑️</button>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+
+    cont.innerHTML='';
+    cont.appendChild(grid);
+  }
+
+  function eliminar(id) {
+    if (!confirm('¿Eliminar esta cotización?')) return;
+    proyectos = proyectos.filter(p=>p.id!==id);
+    localStorage.setItem('cotipro_proyectos', JSON.stringify(proyectos));
+    document.getElementById('subtitulo').textContent=`${proyectos.length} muebles cotizados`;
+    renderGaleria();
+    mostrarToast('🗑️ Cotización eliminada');
+  }
+
+  function mostrarToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2800);
+  }
+
+  cargar();
+</script>
+</body>
+</html>

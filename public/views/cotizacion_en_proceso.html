@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vikingos — Cotizaciones en Proceso</title>
+  <link rel="stylesheet" href="../styles/estilos.css"/>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="main-area">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Cotizaciones en Proceso</div>
+        <div class="page-sub" id="subtitulo">Proyectos sin completar</div>
+      </div>
+      <div class="topbar-actions">
+        <a href="cotizar.html" class="btn btn-primary">+ Nueva Cotización</a>
+      </div>
+    </div>
+
+    <div class="content">
+      <div id="procesoContainer">
+        <div class="empty-state">
+          <div class="empty-icon">📝</div>
+          <div class="empty-title">Sin cotizaciones en proceso</div>
+          <div class="empty-sub">Las cotizaciones sin guardar aparecerán aquí</div>
+          <br/><a href="cotizar.html" class="btn btn-primary" style="margin-top:16px;">Crear Cotización</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../config/routes.js"></script>
+<script src="../components/navbar.js"></script>
+<script>
+  renderSidebar('cotizacion_en_proceso');
+
+  function mostrarToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2800);
+  }
+
+  function cargar() {
+    const enProceso = JSON.parse(localStorage.getItem('cotipro_en_proceso') || '[]');
+    const cont = document.getElementById('procesoContainer');
+
+    if (enProceso.length === 0) {
+      return;
+    }
+
+    let html = '<div class="g-grid">';
+    enProceso.forEach((p, i) => {
+      html += `
+        <div class="g-card">
+          <div class="g-body">
+            <div class="g-name">${p.name || 'Sin nombre'}</div>
+            <div class="g-client">📝 Borrador ${new Date(p.date).toLocaleDateString('es-CO')}</div>
+            <div class="g-actions" style="margin-top:12px;">
+              <a href="cotizar.html?draft=${i}" class="btn btn-ghost btn-sm">✏️ Continuar</a>
+              <button class="btn btn-danger btn-sm" onclick="eliminar(${i})">🗑️</button>
+            </div>
+          </div>
+        </div>`;
+    });
+    html += '</div>';
+    cont.innerHTML = html;
+    document.getElementById('subtitulo').textContent = `${enProceso.length} cotización${enProceso.length!==1?'es':''} sin guardar`;
+  }
+
+  function eliminar(idx) {
+    if (!confirm('¿Eliminar este borrador?')) return;
+    const enProceso = JSON.parse(localStorage.getItem('cotipro_en_proceso') || '[]');
+    enProceso.splice(idx, 1);
+    localStorage.setItem('cotipro_en_proceso', JSON.stringify(enProceso));
+    cargar();
+    mostrarToast('🗑️ Borrador eliminado');
+  }
+
+  cargar();
+</script>
+</body>
+</html>

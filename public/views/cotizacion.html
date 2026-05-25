@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CotiPro — Costos Carpintería</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f8f5f0;--surface:#fff;--surface2:#f3ede4;
+  --border:#e0d5c5;--border2:#ccc0aa;
+  --text:#1a1410;--text2:#6b5e4e;--text3:#a0917f;
+  --amber:#c87f1a;--amber-l:#faeeda;--amber-d:#7a4d0a;
+  --teal:#0f6e56;--teal-l:#e1f5ee;
+  --red:#a32d2d;--red-l:#fcebeb;
+  --radius:8px;--radius-lg:12px;
+  --shadow:0 1px 4px rgba(0,0,0,.08);
+}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:15px}
+a{color:var(--amber)}
+
+/* Layout */
+.app{max-width:860px;margin:0 auto;padding:1.5rem 1rem 4rem}
+.header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
+.logo{width:44px;height:44px;background:var(--amber);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;flex-shrink:0}
+.header-text h1{font-size:20px;font-weight:700;color:var(--text)}
+.header-text p{font-size:13px;color:var(--text2);margin-top:1px}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;margin-bottom:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:4px;overflow-x:auto}
+.tab{flex:1;min-width:fit-content;padding:9px 14px;font-size:13px;font-weight:500;background:none;border:none;border-radius:var(--radius);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all .15s;white-space:nowrap}
+.tab.active{background:var(--amber);color:#fff;box-shadow:var(--shadow)}
+.tab:hover:not(.active){background:var(--surface2);color:var(--text)}
+.tab-badge{background:rgba(255,255,255,.3);color:inherit;font-size:11px;padding:1px 6px;border-radius:20px;min-width:20px;text-align:center}
+.tab:not(.active) .tab-badge{background:var(--amber-l);color:var(--amber-d)}
+
+/* Cards */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1.25rem;margin-bottom:1rem}
+.card-title{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.card-title i{color:var(--amber)}
+
+/* Forms */
+.form-grid{display:grid;gap:8px}
+.g2{grid-template-columns:1fr 1fr}
+.g3{grid-template-columns:2fr 1fr 1fr}
+.g4{grid-template-columns:2fr 1fr 1fr 1fr}
+.g-unit{grid-template-columns:2fr 1fr 1fr 1fr 1fr}
+.g-add{grid-template-columns:1fr auto}
+.g-mo{grid-template-columns:2fr 1fr 1fr auto}
+.g-ga{grid-template-columns:2fr 1fr auto}
+.form-label{font-size:12px;color:var(--text2);margin-bottom:3px;font-weight:500}
+label{display:block}
+input[type=text],input[type=number],select,textarea{
+  width:100%;padding:9px 11px;font-size:14px;
+  border:1px solid var(--border);border-radius:var(--radius);
+  background:var(--surface);color:var(--text);outline:none;
+  transition:border-color .15s,box-shadow .15s;
+  font-family:inherit
+}
+input:focus,select:focus,textarea:focus{border-color:var(--amber);box-shadow:0 0 0 3px rgba(200,127,26,.15)}
+input::placeholder,textarea::placeholder{color:var(--text3)}
+.unit-custom{display:none}
+.unit-custom.show{display:block}
+
+/* Buttons */
+.btn{padding:9px 16px;font-size:13px;font-weight:500;border-radius:var(--radius);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .12s;border:1px solid;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--amber);border-color:var(--amber-d);color:#fff}
+.btn-primary:hover{background:#b5711a}
+.btn-secondary{background:var(--surface);border-color:var(--border2);color:var(--text2)}
+.btn-secondary:hover{background:var(--surface2);color:var(--text)}
+.btn-danger{background:var(--red-l);border-color:transparent;color:var(--red)}
+.btn-danger:hover{background:#f7c1c1}
+.btn-sm{padding:6px 11px;font-size:12px}
+.btn-icon{padding:7px;border:1px solid var(--border);background:var(--surface);border-radius:var(--radius);cursor:pointer;color:var(--text2);display:inline-flex;align-items:center;transition:all .12s}
+.btn-icon:hover{background:var(--surface2);color:var(--text)}
+.btn-icon.del:hover{background:var(--red-l);color:var(--red);border-color:transparent}
+.actions{display:flex;gap:8px;justify-content:flex-end;margin-top:8px}
+
+/* Item rows */
+.item-list{display:flex;flex-direction:column;gap:6px}
+.item-row{display:grid;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;font-size:14px}
+.item-mat{grid-template-columns:1.8fr .7fr .7fr .7fr auto}
+.item-mo{grid-template-columns:1.8fr .7fr .7fr .7fr auto}
+.item-ga{grid-template-columns:2fr 1fr auto}
+.item-name{font-weight:600;color:var(--text)}
+.item-val{color:var(--text2);font-size:13px}
+.item-total{font-weight:700;color:var(--amber-d);text-align:right}
+.empty{text-align:center;padding:2rem;color:var(--text3);border:1.5px dashed var(--border);border-radius:var(--radius-lg)}
+.empty i{font-size:28px;display:block;margin-bottom:8px}
+
+/* Summary metrics */
+.metrics{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:1rem}
+.metric{background:var(--surface2);border-radius:var(--radius);padding:14px 16px;border:1px solid var(--border)}
+.metric-label{font-size:12px;color:var(--text2);margin-bottom:4px;font-weight:500}
+.metric-value{font-size:20px;font-weight:700;color:var(--text)}
+.metric-value.amber{color:var(--amber-d)}
+.metric-value.green{color:var(--teal)}
+
+/* Quote preview */
+.quote-preview{border:1.5px solid var(--border2);border-radius:var(--radius-lg);overflow:hidden;margin-bottom:1rem}
+.quote-preview-header{background:var(--amber);color:#fff;padding:1rem 1.25rem;display:flex;justify-content:space-between;align-items:flex-start}
+.quote-preview-header h2{font-size:17px;font-weight:700}
+.quote-preview-header p{font-size:13px;opacity:.85;margin-top:2px}
+.quote-badge{background:rgba(255,255,255,.2);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:600}
+.quote-body{background:var(--surface);padding:1.25rem}
+.quote-line{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:14px}
+.quote-line:last-child{border:none;padding-bottom:0}
+.quote-line.strong{font-weight:700;font-size:16px;padding-top:12px}
+.quote-line.profit{color:var(--teal)}
+.quote-line.iva-line{color:var(--text2)}
+.quote-total-value{font-size:22px;font-weight:800;color:var(--amber-d)}
+
+/* Slider */
+.slider-section{display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.slider-label{font-size:14px;color:var(--text2);min-width:90px;font-weight:500}
+input[type=range]{flex:1;min-width:120px;accent-color:var(--amber);cursor:pointer}
+.slider-val{font-size:15px;font-weight:700;color:var(--amber-d);min-width:46px;text-align:right}
+.checkbox-row{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text2);cursor:pointer;margin-bottom:12px}
+input[type=checkbox]{accent-color:var(--amber);width:16px;height:16px;cursor:pointer}
+
+/* History */
+.history-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:1rem 1.25rem;margin-bottom:8px;display:grid;grid-template-columns:1fr auto;align-items:center;gap:12px;transition:border-color .15s}
+.history-card:hover{border-color:var(--border2)}
+.history-title{font-weight:700;font-size:15px;color:var(--text)}
+.history-meta{font-size:12px;color:var(--text2);margin-top:3px}
+.history-total{font-size:17px;font-weight:800;color:var(--amber-d);margin-bottom:4px;text-align:right}
+.history-actions{display:flex;gap:6px;justify-content:flex-end}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;align-items:center;justify-content:center;padding:1rem}
+.modal-overlay.show{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);padding:1.5rem;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.18);max-height:90vh;overflow-y:auto}
+.modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}
+.modal-header h2{font-size:17px;font-weight:700}
+.modal-body p{font-size:14px;color:var(--text2);margin-bottom:1.25rem}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.25rem}
+
+/* Divider */
+.divider{height:1px;background:var(--border);margin:1rem 0}
+
+/* Toast */
+.toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#1a1410;color:#fff;padding:12px 20px;border-radius:var(--radius-lg);font-size:14px;font-weight:500;box-shadow:0 4px 16px rgba(0,0,0,.25);z-index:200;display:flex;align-items:center;gap:8px;transform:translateY(80px);opacity:0;transition:all .25s;pointer-events:none}
+.toast.show{transform:none;opacity:1}
+.toast.success{background:var(--teal)}
+.toast.error{background:var(--red)}
+
+/* Utility */
+.section-divider{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.tag{font-size:11px;padding:2px 10px;border-radius:20px;font-weight:600;background:var(--amber-l);color:var(--amber-d)}
+.text-right{text-align:right}
+.text-muted{color:var(--text2)}
+.bold{font-weight:700}
+.mt-1{margin-top:8px}
+.mt-2{margin-top:16px}
+
+/* Responsive */
+@media(max-width:600px){
+  .g4,.g-unit{grid-template-columns:1fr 1fr}
+  .g3{grid-template-columns:1fr 1fr}
+  .g-mo{grid-template-columns:1fr 1fr}
+  .item-mat,.item-mo{grid-template-columns:1fr 1fr auto}
+  .item-mat .item-val:nth-child(3),.item-mo .item-val:nth-child(3){display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <div class="logo"><i class="ti ti-hammer"></i></div>
+    <div class="header-text">
+      <h1>CotiPro</h1>
+      <p>Calculadora de costos y cotizaciones para carpintería</p>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs"></div>
+  <div id="content"></div>
+</div>
+
+<!-- Modal Confirmar Cargar -->
+<div class="modal-overlay" id="modalCargar">
+  <div class="modal">
+    <div class="modal-header">
+      <h2><i class="ti ti-folder-open" style="color:var(--amber)"></i> Cargar cotización</h2>
+      <button class="btn-icon" onclick="closeModal('modalCargar')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p>¿Deseas cargar esta cotización? Los datos actuales sin guardar se perderán.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalCargar')">Cancelar</button>
+      <button class="btn btn-primary" id="btnConfirmarCargar">Sí, cargar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Confirmar Eliminar -->
+<div class="modal-overlay" id="modalEliminar">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 style="color:var(--red)"><i class="ti ti-alert-triangle"></i> Eliminar cotización</h2>
+      <button class="btn-icon" onclick="closeModal('modalEliminar')"><i class="ti ti-x"></i></button>
+    </div>
+    <div class="modal-body">
+      <p>Esta acción no se puede deshacer. ¿Estás seguro de que quieres eliminar esta cotización del historial?</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('modalEliminar')">Cancelar</button>
+      <button class="btn btn-danger" id="btnConfirmarEliminar">Eliminar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"><i class="ti ti-check"></i><span id="toastMsg"></span></div>
+
+<script>
+// ─── ESTADO ─────────────────────────────────────────────────────────────────
+const state = {
+  tab: 'materiales',
+  proyecto: '',
+  cliente: '',
+  materiales: [],
+  manoObra: [],
+  gastos: [],
+  margen: 30,
+  iva: 19,
+  incluirIva: false,
+  matForm: { nombre:'', cantidad:1, unidad:'unidad', unidadCustom:'', precio:0 },
+  moForm: { descripcion:'', horas:1, tarifa:25000 },
+  gaForm: { descripcion:'', valor:0 },
+};
+
+const UNIDADES = ['unidad','m²','ml','m³','kg','litro','vara','tabla','rollo','hoja','par','juego','personalizada'];
+
+// ─── LOCALSTORAGE ────────────────────────────────────────────────────────────
+function getHistorial() {
+  try { return JSON.parse(localStorage.getItem('cotipro_historial') || '[]'); } catch { return []; }
+}
+function guardarEnHistorial(cot) {
+  const h = getHistorial();
+  h.unshift(cot);
+  localStorage.setItem('cotipro_historial', JSON.stringify(h.slice(0,50)));
+}
+function eliminarDeHistorial(idx) {
+  const h = getHistorial();
+  h.splice(idx,1);
+  localStorage.setItem('cotipro_historial', JSON.stringify(h));
+}
+
+// ─── CÁLCULOS ────────────────────────────────────────────────────────────────
+const totalMat = () => state.materiales.reduce((a,i) => a + i.cantidad * i.precio, 0);
+const totalMO  = () => state.manoObra.reduce((a,i) => a + i.horas * i.tarifa, 0);
+const totalGa  = () => state.gastos.reduce((a,i) => a + i.valor, 0);
+const costoBase = () => totalMat() + totalMO() + totalGa();
+const ganancia  = () => costoBase() * state.margen / 100;
+const subtotal  = () => costoBase() + ganancia();
+const ivaVal    = () => state.incluirIva ? subtotal() * state.iva / 100 : 0;
+const totalFinal = () => subtotal() + ivaVal();
+
+const fmt = n => Number(n).toLocaleString('es-CO', {style:'currency',currency:'COP',maximumFractionDigits:0});
+const num = v => parseFloat(v) || 0;
+
+// ─── TOAST ───────────────────────────────────────────────────────────────────
+let toastTimer;
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.className = `toast show ${type}`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.className = 'toast', 3000);
+}
+
+// ─── MODAL ───────────────────────────────────────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ─── RENDER TABS ─────────────────────────────────────────────────────────────
+function renderTabs() {
+  const tabs = [
+    { id:'materiales', icon:'ti-package', label:'Materiales', count:state.materiales.length },
+    { id:'manobra',    icon:'ti-tools',   label:'Mano de obra', count:state.manoObra.length },
+    { id:'gastos',     icon:'ti-receipt', label:'Gastos', count:state.gastos.length },
+    { id:'cotizacion', icon:'ti-file-invoice', label:'Cotización' },
+    { id:'historial',  icon:'ti-history', label:'Historial', count:getHistorial().length },
+  ];
+  document.getElementById('tabs').innerHTML = tabs.map(t => `
+    <button class="tab ${state.tab===t.id?'active':''}" onclick="setTab('${t.id}')">
+      <i class="ti ${t.icon}"></i> ${t.label}
+      ${t.count!=null && t.count>0 ? `<span class="tab-badge">${t.count}</span>` : ''}
+    </button>`).join('');
+}
+
+function setTab(t) { state.tab = t; render(); }
+
+// ─── RENDER MAIN ─────────────────────────────────────────────────────────────
+function render() {
+  renderTabs();
+  const map = { materiales:renderMateriales, manobra:renderManoObra, gastos:renderGastos, cotizacion:renderCotizacion, historial:renderHistorial };
+  document.getElementById('content').innerHTML = (map[state.tab] || renderMateriales)();
+  bindEvents();
+}
+
+// ─── MATERIALES ──────────────────────────────────────────────────────────────
+function renderMateriales() {
+  const f = state.matForm;
+  const isCustom = f.unidad === 'personalizada';
+  return `
+  <div class="card">
+    <div class="card-title"><i class="ti ti-plus-square"></i> Agregar material</div>
+    <div class="form-grid ${isCustom?'g-unit':'g4'}" style="margin-bottom:8px">
+      <div>
+        <div class="form-label">Nombre</div>
+        <input type="text" id="mNom" placeholder="Ej: Madera pino" value="${esc(f.nombre)}" oninput="mf('nombre',this.value)">
+      </div>
+      <div>
+        <div class="form-label">Cantidad</div>
+        <input type="number" id="mCant" min="0.01" step="0.01" value="${f.cantidad}" oninput="mf('cantidad',this.value)">
+      </div>
+      <div>
+        <div class="form-label">Unidad</div>
+        <select id="mUnid" onchange="mf('unidad',this.value);render()">
+          ${UNIDADES.map(u => `<option value="${u}" ${f.unidad===u?'selected':''}>${u}</option>`).join('')}
+        </select>
+      </div>
+      ${isCustom ? `<div>
+        <div class="form-label">Unidad personalizada</div>
+        <input type="text" id="mUnidCustom" placeholder="Ej: pulgada" value="${esc(f.unidadCustom)}" oninput="mf('unidadCustom',this.value)">
+      </div>` : ''}
+      <div>
+        <div class="form-label">Precio unitario (COP)</div>
+        <input type="number" id="mPre" min="0" placeholder="0" value="${f.precio||''}" oninput="mf('precio',this.value)">
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" onclick="addMat()"><i class="ti ti-plus"></i> Agregar material</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-divider">
+      <div class="card-title" style="margin:0"><i class="ti ti-list"></i> Lista (${state.materiales.length})</div>
+      ${state.materiales.length ? `<span class="bold amber" style="color:var(--amber-d)">${fmt(totalMat())}</span>` : ''}
+    </div>
+    ${state.materiales.length === 0
+      ? `<div class="empty"><i class="ti ti-package-off"></i>Sin materiales aún. Agrega el primero arriba.</div>`
+      : `<div class="item-list">${state.materiales.map((m,i) => `
+        <div class="item-row item-mat">
+          <span class="item-name">${esc(m.nombre)}</span>
+          <span class="item-val">${m.cantidad} ${esc(m.unidad)}</span>
+          <span class="item-val">${fmt(m.precio)}</span>
+          <span class="item-total">${fmt(m.cantidad * m.precio)}</span>
+          <button class="btn-icon del" onclick="delItem('materiales',${i})" title="Eliminar"><i class="ti ti-trash" style="font-size:15px"></i></button>
+        </div>`).join('')}</div>`}
+  </div>`;
+}
+
+// ─── MANO DE OBRA ────────────────────────────────────────────────────────────
+function renderManoObra() {
+  const f = state.moForm;
+  return `
+  <div class="card">
+    <div class="card-title"><i class="ti ti-plus-square"></i> Agregar tarea</div>
+    <div class="form-grid g-mo" style="margin-bottom:8px;align-items:end">
+      <div>
+        <div class="form-label">Descripción</div>
+        <input type="text" placeholder="Ej: Ensamble de puertas" value="${esc(f.descripcion)}" oninput="mof('descripcion',this.value)">
+      </div>
+      <div>
+        <div class="form-label">Horas</div>
+        <input type="number" min="0.5" step="0.5" value="${f.horas}" oninput="mof('horas',this.value)">
+      </div>
+      <div>
+        <div class="form-label">Tarifa / hora (COP)</div>
+        <input type="number" min="0" placeholder="0" value="${f.tarifa||''}" oninput="mof('tarifa',this.value)">
+      </div>
+      <div>
+        <button class="btn btn-primary" style="width:100%;margin-top:20px" onclick="addMO()"><i class="ti ti-plus"></i> Agregar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-divider">
+      <div class="card-title" style="margin:0"><i class="ti ti-list"></i> Tareas (${state.manoObra.length})</div>
+      ${state.manoObra.length ? `<span class="bold" style="color:var(--amber-d)">${fmt(totalMO())}</span>` : ''}
+    </div>
+    ${state.manoObra.length === 0
+      ? `<div class="empty"><i class="ti ti-user-off"></i>Sin tareas de mano de obra.</div>`
+      : `<div class="item-list">${state.manoObra.map((m,i) => `
+        <div class="item-row item-mo">
+          <span class="item-name">${esc(m.descripcion)}</span>
+          <span class="item-val">${m.horas}h</span>
+          <span class="item-val">${fmt(m.tarifa)}/h</span>
+          <span class="item-total">${fmt(m.horas * m.tarifa)}</span>
+          <button class="btn-icon del" onclick="delItem('manoObra',${i})" title="Eliminar"><i class="ti ti-trash" style="font-size:15px"></i></button>
+        </div>`).join('')}</div>`}
+  </div>`;
+}
+
+// ─── GASTOS ──────────────────────────────────────────────────────────────────
+function renderGastos() {
+  const f = state.gaForm;
+  return `
+  <div class="card">
+    <div class="card-title"><i class="ti ti-plus-square"></i> Agregar gasto adicional</div>
+    <div class="form-grid g-ga" style="margin-bottom:8px;align-items:end">
+      <div>
+        <div class="form-label">Descripción</div>
+        <input type="text" placeholder="Ej: Transporte, lija, pintura..." value="${esc(f.descripcion)}" oninput="gaf('descripcion',this.value)">
+      </div>
+      <div>
+        <div class="form-label">Valor (COP)</div>
+        <input type="number" min="0" placeholder="0" value="${f.valor||''}" oninput="gaf('valor',this.value)">
+      </div>
+      <button class="btn btn-primary" style="margin-top:20px" onclick="addGa()"><i class="ti ti-plus"></i> Agregar</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="section-divider">
+      <div class="card-title" style="margin:0"><i class="ti ti-list"></i> Gastos (${state.gastos.length})</div>
+      ${state.gastos.length ? `<span class="bold" style="color:var(--amber-d)">${fmt(totalGa())}</span>` : ''}
+    </div>
+    ${state.gastos.length === 0
+      ? `<div class="empty"><i class="ti ti-receipt-off"></i>Sin gastos adicionales.</div>`
+      : `<div class="item-list">${state.gastos.map((g,i) => `
+        <div class="item-row item-ga">
+          <span class="item-name">${esc(g.descripcion)}</span>
+          <span class="item-total">${fmt(g.valor)}</span>
+          <button class="btn-icon del" onclick="delItem('gastos',${i})" title="Eliminar"><i class="ti ti-trash" style="font-size:15px"></i></button>
+        </div>`).join('')}</div>`}
+  </div>`;
+}
+
+// ─── COTIZACIÓN ──────────────────────────────────────────────────────────────
+function renderCotizacion() {
+  const cb=costoBase(),gan=ganancia(),tot=totalFinal();
+  return `
+  <div class="card">
+    <div class="card-title"><i class="ti ti-user"></i> Datos del proyecto</div>
+    <div class="form-grid g2">
+      <div>
+        <div class="form-label">Nombre del proyecto</div>
+        <input type="text" placeholder="Ej: Closet habitación principal" value="${esc(state.proyecto)}" oninput="state.proyecto=this.value">
+      </div>
+      <div>
+        <div class="form-label">Cliente</div>
+        <input type="text" placeholder="Nombre del cliente" value="${esc(state.cliente)}" oninput="state.cliente=this.value">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-chart-bar"></i> Resumen de costos</div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-label">Materiales</div><div class="metric-value">${fmt(totalMat())}</div></div>
+      <div class="metric"><div class="metric-label">Mano de obra</div><div class="metric-value">${fmt(totalMO())}</div></div>
+      <div class="metric"><div class="metric-label">Otros gastos</div><div class="metric-value">${fmt(totalGa())}</div></div>
+      <div class="metric"><div class="metric-label">Costo base</div><div class="metric-value amber">${fmt(cb)}</div></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="slider-section">
+      <span class="slider-label">Ganancia</span>
+      <input type="range" min="0" max="150" step="1" value="${state.margen}" oninput="state.margen=+this.value;render()">
+      <span class="slider-val">${state.margen}%</span>
+    </div>
+    <label class="checkbox-row">
+      <input type="checkbox" ${state.incluirIva?'checked':''} onchange="state.incluirIva=this.checked;render()">
+      Incluir IVA (${state.iva}%) sobre el subtotal
+    </label>
+  </div>
+
+  <div class="quote-preview">
+    <div class="quote-preview-header">
+      <div>
+        <h2>${esc(state.proyecto)||'Proyecto sin nombre'}</h2>
+        <p>${esc(state.cliente)||'Cliente'} &nbsp;·&nbsp; ${new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'})}</p>
+      </div>
+      <span class="quote-badge">COTIZACIÓN</span>
+    </div>
+    <div class="quote-body">
+      ${state.materiales.length?`<div class="quote-line"><span class="text-muted">Materiales</span><span>${fmt(totalMat())}</span></div>`:''}
+      ${state.manoObra.length?`<div class="quote-line"><span class="text-muted">Mano de obra</span><span>${fmt(totalMO())}</span></div>`:''}
+      ${state.gastos.length?`<div class="quote-line"><span class="text-muted">Otros gastos</span><span>${fmt(totalGa())}</span></div>`:''}
+      <div class="quote-line profit"><span>Ganancia (${state.margen}%)</span><span>+ ${fmt(gan)}</span></div>
+      ${state.incluirIva?`<div class="quote-line iva-line"><span>IVA (${state.iva}%)</span><span>+ ${fmt(ivaVal())}</span></div>`:''}
+      <div class="quote-line strong"><span>TOTAL</span><span class="quote-total-value">${fmt(tot)}</span></div>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="resetTodo()"><i class="ti ti-refresh"></i> Nueva cotización</button>
+    <button class="btn btn-secondary" onclick="copiarResumen()"><i class="ti ti-copy"></i> Copiar resumen</button>
+    <button class="btn btn-secondary" onclick="exportarPDF()"><i class="ti ti-file-type-pdf"></i> Exportar PDF</button>
+    <button class="btn btn-primary" onclick="guardarCotizacion()"><i class="ti ti-device-floppy"></i> Guardar</button>
+  </div>`;
+}
+
+// ─── HISTORIAL ───────────────────────────────────────────────────────────────
+function renderHistorial() {
+  const h = getHistorial();
+  return `
+  <div class="card">
+    <div class="section-divider">
+      <div class="card-title" style="margin:0"><i class="ti ti-history"></i> Cotizaciones guardadas (${h.length})</div>
+      ${h.length?`<button class="btn btn-secondary btn-sm" onclick="limpiarHistorial()"><i class="ti ti-trash"></i> Borrar todo</button>`:''}
+    </div>
+    ${h.length === 0
+      ? `<div class="empty"><i class="ti ti-folder-off"></i>No hay cotizaciones guardadas.<br><small>Guarda una desde la pestaña Cotización.</small></div>`
+      : h.map((c,i) => `
+        <div class="history-card">
+          <div>
+            <div class="history-title">${esc(c.proyecto)||'Sin nombre'}</div>
+            <div class="history-meta">
+              <i class="ti ti-user" style="font-size:12px"></i> ${esc(c.cliente)||'—'}
+              &nbsp;·&nbsp;
+              <i class="ti ti-calendar" style="font-size:12px"></i> ${c.fecha}
+              &nbsp;·&nbsp;
+              <span style="color:var(--amber-d)">Margen ${c.margen}%</span>
+            </div>
+            <div class="history-meta mt-1">
+              Materiales: ${fmt(c.tMat)} · MO: ${fmt(c.tMO)} · Gastos: ${fmt(c.tGa)}
+            </div>
+          </div>
+          <div>
+            <div class="history-total">${fmt(c.total)}</div>
+            <div class="history-actions">
+              <button class="btn-icon" onclick="pedirCargar(${i})" title="Cargar cotización"><i class="ti ti-folder-open"></i></button>
+              <button class="btn-icon" onclick="exportarPDFHistorial(${i})" title="Exportar PDF"><i class="ti ti-file-type-pdf"></i></button>
+              <button class="btn-icon del" onclick="pedirEliminar(${i})" title="Eliminar"><i class="ti ti-trash"></i></button>
+            </div>
+          </div>
+        </div>`).join('')}
+  </div>`;
+}
+
+// ─── BIND EVENTS ─────────────────────────────────────────────────────────────
+function bindEvents() {}
+
+// ─── ACCIONES MATERIALES ─────────────────────────────────────────────────────
+function mf(k,v){ state.matForm[k] = (k==='nombre'||k==='unidadCustom') ? v : (num(v)||v); }
+function mof(k,v){ state.moForm[k] = k==='descripcion' ? v : (num(v)||v); }
+function gaf(k,v){ state.gaForm[k] = k==='descripcion' ? v : (num(v)||v); }
+
+function addMat() {
+  const f = state.matForm;
+  if (!f.nombre.trim()) { showToast('Escribe el nombre del material','error'); return; }
+  if (!f.precio)        { showToast('Ingresa el precio unitario','error'); return; }
+  const unidad = f.unidad === 'personalizada' ? (f.unidadCustom.trim()||'ud') : f.unidad;
+  state.materiales.push({ nombre:f.nombre.trim(), cantidad:num(f.cantidad)||1, unidad, precio:num(f.precio) });
+  state.matForm = { nombre:'', cantidad:1, unidad:f.unidad, unidadCustom:f.unidadCustom, precio:0 };
+  showToast('Material agregado');
+  render();
+}
+function addMO() {
+  const f = state.moForm;
+  if (!f.descripcion.trim()) { showToast('Escribe la descripción','error'); return; }
+  if (!f.tarifa)             { showToast('Ingresa la tarifa por hora','error'); return; }
+  state.manoObra.push({ descripcion:f.descripcion.trim(), horas:num(f.horas)||1, tarifa:num(f.tarifa) });
+  state.moForm = { descripcion:'', horas:1, tarifa:f.tarifa };
+  showToast('Tarea agregada');
+  render();
+}
+function addGa() {
+  const f = state.gaForm;
+  if (!f.descripcion.trim()) { showToast('Escribe la descripción','error'); return; }
+  if (!f.valor)              { showToast('Ingresa el valor','error'); return; }
+  state.gastos.push({ descripcion:f.descripcion.trim(), valor:num(f.valor) });
+  state.gaForm = { descripcion:'', valor:0 };
+  showToast('Gasto agregado');
+  render();
+}
+function delItem(lista, idx) {
+  state[lista].splice(idx, 1);
+  showToast('Eliminado');
+  render();
+}
+
+// ─── COTIZACIÓN ACCIONES ─────────────────────────────────────────────────────
+function guardarCotizacion() {
+  if (!costoBase()) { showToast('Agrega al menos un ítem antes de guardar','error'); return; }
+  const cot = {
+    proyecto: state.proyecto.trim()||'Sin nombre',
+    cliente:  state.cliente.trim()||'—',
+    fecha:    new Date().toLocaleDateString('es-CO'),
+    margen:   state.margen,
+    incluirIva: state.incluirIva,
+    iva:      state.iva,
+    tMat:     totalMat(),
+    tMO:      totalMO(),
+    tGa:      totalGa(),
+    total:    totalFinal(),
+    materiales: JSON.parse(JSON.stringify(state.materiales)),
+    manoObra:   JSON.parse(JSON.stringify(state.manoObra)),
+    gastos:     JSON.parse(JSON.stringify(state.gastos)),
+  };
+  guardarEnHistorial(cot);
+  showToast('Cotización guardada en historial ✓');
+  render();
+}
+
+function resetTodo() {
+  if (!confirm('¿Limpiar todo y empezar una nueva cotización?')) return;
+  Object.assign(state, { proyecto:'', cliente:'', materiales:[], manoObra:[], gastos:[], margen:30, incluirIva:false });
+  showToast('Lista para nueva cotización');
+  render();
+}
+
+function copiarResumen() {
+  const lines = [
+    `COTIZACIÓN — ${state.proyecto||'Proyecto'}`,
+    `Cliente: ${state.cliente||'—'}`,
+    `Fecha: ${new Date().toLocaleDateString('es-CO')}`,
+    '',
+    state.materiales.length ? `Materiales:   ${fmt(totalMat())}` : null,
+    state.manoObra.length   ? `Mano de obra: ${fmt(totalMO())}` : null,
+    state.gastos.length     ? `Otros gastos: ${fmt(totalGa())}` : null,
+    `Ganancia (${state.margen}%): +${fmt(ganancia())}`,
+    state.incluirIva        ? `IVA (${state.iva}%): +${fmt(ivaVal())}` : null,
+    '',
+    `TOTAL: ${fmt(totalFinal())}`,
+  ].filter(l => l !== null);
+  navigator.clipboard.writeText(lines.join('\n'))
+    .then(() => showToast('Resumen copiado al portapapeles'))
+    .catch(() => showToast('No se pudo copiar','error'));
+}
+
+// ─── HISTORIAL ACCIONES ──────────────────────────────────────────────────────
+let pendingIdx = null;
+
+function pedirCargar(idx) {
+  pendingIdx = idx;
+  openModal('modalCargar');
+  document.getElementById('btnConfirmarCargar').onclick = () => { cargarCotizacion(idx); closeModal('modalCargar'); };
+}
+function pedirEliminar(idx) {
+  pendingIdx = idx;
+  openModal('modalEliminar');
+  document.getElementById('btnConfirmarEliminar').onclick = () => { eliminarDeHistorial(idx); closeModal('modalEliminar'); render(); showToast('Cotización eliminada'); };
+}
+function cargarCotizacion(idx) {
+  const c = getHistorial()[idx];
+  if (!c) return;
+  state.proyecto  = c.proyecto;
+  state.cliente   = c.cliente;
+  state.margen    = c.margen;
+  state.incluirIva = c.incluirIva;
+  state.iva       = c.iva;
+  state.materiales = JSON.parse(JSON.stringify(c.materiales));
+  state.manoObra   = JSON.parse(JSON.stringify(c.manoObra));
+  state.gastos     = JSON.parse(JSON.stringify(c.gastos));
+  state.tab = 'cotizacion';
+  showToast(`"${c.proyecto}" cargado correctamente`);
+  render();
+}
+function limpiarHistorial() {
+  if (!confirm('¿Borrar todo el historial? Esta acción no se puede deshacer.')) return;
+  localStorage.removeItem('cotipro_historial');
+  showToast('Historial limpiado');
+  render();
+}
+function exportarPDFHistorial(idx) {
+  const c = getHistorial()[idx];
+  if (!c) return;
+  generarPDF(c);
+}
+
+// ─── PDF EXPORT ──────────────────────────────────────────────────────────────
+function exportarPDF() {
+  if (!costoBase()) { showToast('Agrega ítems antes de exportar','error'); return; }
+  const c = {
+    proyecto:   state.proyecto||'Proyecto',
+    cliente:    state.cliente||'Cliente',
+    fecha:      new Date().toLocaleDateString('es-CO'),
+    margen:     state.margen,
+    incluirIva: state.incluirIva,
+    iva:        state.iva,
+    tMat:       totalMat(),
+    tMO:        totalMO(),
+    tGa:        totalGa(),
+    total:      totalFinal(),
+    materiales: state.materiales,
+    manoObra:   state.manoObra,
+    gastos:     state.gastos,
+  };
+  generarPDF(c);
+}
+
+function generarPDF(c) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+  const PW = 210, PH = 297, ML = 15, MR = 15, W = PW - ML - MR;
+  let y = 0;
+
+  // ── Encabezado ──
+  doc.setFillColor(200, 127, 26);
+  doc.rect(0, 0, PW, 40, 'F');
+  doc.setTextColor(255,255,255);
+  doc.setFontSize(22); doc.setFont('helvetica','bold');
+  doc.text('CotiPro', ML, 18);
+  doc.setFontSize(10); doc.setFont('helvetica','normal');
+  doc.text('Calculadora de costos de carpintería', ML, 25);
+  doc.setFontSize(9);
+  doc.text(`Fecha: ${c.fecha}`, PW - MR, 14, {align:'right'});
+
+  // ── Caja datos del proyecto ──
+  y = 50;
+  doc.setFillColor(243, 237, 228);
+  doc.roundedRect(ML, y, W, 22, 3, 3, 'F');
+  doc.setTextColor(122, 77, 10);
+  doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text(c.proyecto, ML+6, y+8);
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(107, 94, 78);
+  doc.text(`Cliente: ${c.cliente}`, ML+6, y+15);
+  doc.text(`Margen: ${c.margen}%${c.incluirIva ? ` · IVA: ${c.iva}%` : ''}`, PW-MR, y+15, {align:'right'});
+  y += 32;
+
+  // ── Tabla Materiales ──
+  if (c.materiales && c.materiales.length > 0) {
+    doc.setTextColor(122,77,10); doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text('Materiales', ML, y); y += 5;
+    doc.autoTable({
+      startY: y,
+      margin: { left:ML, right:MR },
+      head: [['Material','Cantidad','Unidad','Precio unit.','Subtotal']],
+      body: c.materiales.map(m => [m.nombre, m.cantidad, m.unidad, fmt(m.precio), fmt(m.cantidad*m.precio)]),
+      foot: [['','','','Total', fmt(c.tMat)]],
+      styles: { fontSize:9, cellPadding:3 },
+      headStyles: { fillColor:[200,127,26], textColor:255, fontStyle:'bold' },
+      footStyles: { fillColor:[250,238,218], textColor:[122,77,10], fontStyle:'bold' },
+      alternateRowStyles: { fillColor:[248,245,240] },
+      columnStyles: { 0:{cellWidth:60}, 1:{halign:'center'}, 2:{halign:'center'}, 3:{halign:'right'}, 4:{halign:'right',fontStyle:'bold'} },
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+
+  // ── Tabla Mano de Obra ──
+  if (c.manoObra && c.manoObra.length > 0) {
+    doc.setTextColor(122,77,10); doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text('Mano de obra', ML, y); y += 5;
+    doc.autoTable({
+      startY: y,
+      margin: { left:ML, right:MR },
+      head: [['Descripción','Horas','Tarifa / hora','Subtotal']],
+      body: c.manoObra.map(m => [m.descripcion, m.horas, fmt(m.tarifa), fmt(m.horas*m.tarifa)]),
+      foot: [['','','Total', fmt(c.tMO)]],
+      styles: { fontSize:9, cellPadding:3 },
+      headStyles: { fillColor:[15,110,86], textColor:255, fontStyle:'bold' },
+      footStyles: { fillColor:[225,245,238], textColor:[15,110,86], fontStyle:'bold' },
+      alternateRowStyles: { fillColor:[248,245,240] },
+      columnStyles: { 0:{cellWidth:80}, 1:{halign:'center'}, 2:{halign:'right'}, 3:{halign:'right',fontStyle:'bold'} },
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+
+  // ── Tabla Gastos ──
+  if (c.gastos && c.gastos.length > 0) {
+    doc.setTextColor(122,77,10); doc.setFontSize(10); doc.setFont('helvetica','bold');
+    doc.text('Gastos adicionales', ML, y); y += 5;
+    doc.autoTable({
+      startY: y,
+      margin: { left:ML, right:MR },
+      head: [['Descripción','Valor']],
+      body: c.gastos.map(g => [g.descripcion, fmt(g.valor)]),
+      foot: [['Total', fmt(c.tGa)]],
+      styles: { fontSize:9, cellPadding:3 },
+      headStyles: { fillColor:[95,94,90], textColor:255, fontStyle:'bold' },
+      footStyles: { fillColor:[241,239,232], textColor:[44,44,42], fontStyle:'bold' },
+      alternateRowStyles: { fillColor:[248,245,240] },
+      columnStyles: { 0:{cellWidth:120}, 1:{halign:'right',fontStyle:'bold'} },
+    });
+    y = doc.lastAutoTable.finalY + 8;
+  }
+
+  // ── Resumen final ──
+  const ganP  = (c.tMat + c.tMO + c.tGa) * c.margen / 100;
+  const subP  = (c.tMat + c.tMO + c.tGa) + ganP;
+  const ivaP  = c.incluirIva ? subP * c.iva / 100 : 0;
+  const lines = [
+    ['Materiales', fmt(c.tMat)],
+    ['Mano de obra', fmt(c.tMO)],
+    ['Otros gastos', fmt(c.tGa)],
+    [`Ganancia (${c.margen}%)`, fmt(ganP)],
+    ...(c.incluirIva ? [[`IVA (${c.iva}%)`, fmt(ivaP)]] : []),
+  ];
+
+  // Si ya no hay espacio en la página actual
+  if (y + 10 + lines.length * 8 + 20 > PH - 20) { doc.addPage(); y = 20; }
+
+  doc.setFillColor(243,237,228);
+  const boxH = lines.length * 8 + 24;
+  doc.roundedRect(ML, y, W, boxH, 3, 3, 'F');
+  doc.setTextColor(122,77,10); doc.setFontSize(10); doc.setFont('helvetica','bold');
+  doc.text('Resumen', ML+6, y+9);
+  y += 14;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(107,94,78);
+  lines.forEach(([k,v]) => {
+    doc.text(k, ML+6, y);
+    doc.text(v, PW-MR-2, y, {align:'right'});
+    y += 8;
+  });
+  y += 4;
+  doc.setFillColor(200,127,26);
+  doc.roundedRect(ML, y, W, 14, 2, 2, 'F');
+  doc.setTextColor(255,255,255); doc.setFontSize(11); doc.setFont('helvetica','bold');
+  doc.text('TOTAL', ML+6, y+9);
+  doc.text(fmt(c.total), PW-MR-2, y+9, {align:'right'});
+
+  // ── Pie de página ──
+  doc.setTextColor(180,178,169); doc.setFontSize(8); doc.setFont('helvetica','normal');
+  doc.text('Generado con CotiPro · Costos Carpintería', PW/2, PH-8, {align:'center'});
+
+  const nombre = `cotizacion_${(c.proyecto||'sin_nombre').replace(/\s+/g,'_').toLowerCase()}_${c.fecha.replace(/\//g,'-')}.pdf`;
+  doc.save(nombre);
+  showToast('PDF exportado correctamente');
+}
+
+// ─── UTILIDADES ──────────────────────────────────────────────────────────────
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>

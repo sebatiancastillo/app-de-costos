@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vikingos — Ajustes</title>
+  <link rel="stylesheet" href="../styles/estilos.css"/>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="main-area">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Configuración</div>
+        <div class="page-sub">Ajustes generales de la aplicación</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="guardarAjustes()">💾 Guardar Cambios</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="dash-grid" style="grid-template-columns:1fr 340px;">
+
+        <div>
+          <div class="section" style="margin-bottom:20px;">
+            <div class="section-title">💰 Tarifa de Mano de Obra</div>
+            <div class="field">
+              <label>Tarifa por hora predeterminada</label>
+              <input type="number" id="tarifaHora" placeholder="35000" min="0"/>
+              <span style="font-size:11px;color:var(--muted);margin-top:4px;display:block;">Valor base usado en nuevas cotizaciones (COP/hora)</span>
+            </div>
+            <div class="g2" style="margin-top:14px;">
+              <div class="field">
+                <label>Horas promedio por m²</label>
+                <input type="number" id="horasXm2" placeholder="2.5" step="0.1" min="0"/>
+              </div>
+              <div class="field">
+                <label>Horas promedio por mueble pequeño</label>
+                <input type="number" id="horasPequeno" placeholder="8" min="0"/>
+              </div>
+            </div>
+          </div>
+
+          <div class="section" style="margin-bottom:20px;">
+            <div class="section-title">📊 Margen de Ganancia Predeterminado</div>
+            <div class="field">
+              <label>Margen base</label>
+              <div class="range-row">
+                <input type="range" id="margenBase" min="5" max="80" value="30" oninput="actualizarMargenPreview()"/>
+                <span class="range-val" id="margenVal">30%</span>
+              </div>
+              <span style="font-size:11px;color:var(--muted);margin-top:4px;display:block;">Este valor se usará como punto de partida en nuevas cotizaciones</span>
+            </div>
+            <div class="field" style="margin-top:14px;">
+              <label>Overhead (gastos indirectos) predeterminado</label>
+              <div class="range-row">
+                <input type="range" id="overheadBase" min="0" max="50" value="15" oninput="actualizarOverheadPreview()"/>
+                <span class="range-val" id="overheadVal">15%</span>
+              </div>
+              <span style="font-size:11px;color:var(--muted);margin-top:4px;display:block;">Transporte, herramientas, arriendo del taller...</span>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">🏢 Información del Taller</div>
+            <div class="g2">
+              <div class="field">
+                <label>Nombre del negocio</label>
+                <input type="text" id="nombreNegocio" placeholder="Vikingos Carpintería"/>
+              </div>
+              <div class="field">
+                <label>Teléfono / WhatsApp</label>
+                <input type="text" id="telefono" placeholder="+57 300 000 0000"/>
+              </div>
+            </div>
+            <div class="field" style="margin-top:14px;">
+              <label>Dirección del taller</label>
+              <input type="text" id="direccion" placeholder="Medellín, Colombia"/>
+            </div>
+            <div class="field" style="margin-top:14px;">
+              <label>Notas / Términos</label>
+              <textarea id="notas" placeholder="Términos y condiciones, política de garantías..." rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="section" style="margin-bottom:20px;">
+            <div class="section-title">📈 Estadísticas Rápidas</div>
+            <div style="display:flex;flex-direction:column;gap:12px;">
+              <div style="display:flex;justify-content:space-between;padding:10px;background:var(--card2);border-radius:8px;">
+                <span style="font-size:13px;color:var(--muted);">Cotizaciones guardadas</span>
+                <span class="mono text-amber" id="statCotizaciones">0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:10px;background:var(--card2);border-radius:8px;">
+                <span style="font-size:13px;color:var(--muted);">Valor total cotizado</span>
+                <span class="mono text-amber" id="statValorTotal">$0</span>
+              </div>
+              <div style="display:flex;justify-content:space-between;padding:10px;background:var(--card2);border-radius:8px;">
+                <span style="font-size:13px;color:var(--muted);">Materiales registrados</span>
+                <span class="mono text-amber" id="statMateriales">0</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section" style="margin-bottom:20px;">
+            <div class="section-title">💡 Tips de Configuración</div>
+            <div class="tip-card">
+              <div class="tip-title">Tarifa de mano de obra</div>
+              <div class="tip-text">Suma tus gastos fijos mensuales (arriendo, servicios,tools) y divídelos entre las horas que trabajas al mes.</div>
+            </div>
+            <div class="tip-card" style="margin-top:10px;">
+              <div class="tip-title">Margen de ganancia</div>
+              <div class="tip-text">Un 30% es un buen punto de partida. Ajusta según la complejidad del proyecto y la competencia.</div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">🗄️ Respaldo de Datos</div>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center;" onclick="exportarDatos()">
+              📥 Exportar datos (JSON)
+            </button>
+            <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:8px;" onclick="importarDatos()">
+              📤 Importar datos
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display:none;" onchange="handleImport(event)"/>
+            <button class="btn btn-danger" style="width:100%;justify-content:center;margin-top:16px;" onclick="resetDatos()">
+              ⚠️ Borrar todos los datos
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="../config/routes.js"></script>
+<script src="../components/navbar.js"></script>
+<script>
+  renderSidebar('ajustes');
+
+  const fmt = n => '$ ' + Math.round(n||0).toLocaleString('es-CO');
+
+  function cargarAjustes() {
+    const ajustes = JSON.parse(localStorage.getItem('cotipro_ajustes') || '{}');
+
+    document.getElementById('tarifaHora').value = ajustes.tarifaHora || 35000;
+    document.getElementById('horasXm2').value = ajustes.horasXm2 || 2.5;
+    document.getElementById('horasPequeno').value = ajustes.horasPequeno || 8;
+    document.getElementById('margenBase').value = ajustes.margenBase || 30;
+    document.getElementById('overheadBase').value = ajustes.overheadBase || 15;
+    document.getElementById('nombreNegocio').value = ajustes.nombreNegocio || 'Vikingos Carpintería';
+    document.getElementById('telefono').value = ajustes.telefono || '';
+    document.getElementById('direccion').value = ajustes.direccion || '';
+    document.getElementById('notas').value = ajustes.notas || '';
+
+    actualizarMargenPreview();
+    actualizarOverheadPreview();
+    actualizarStats();
+  }
+
+  function actualizarMargenPreview() {
+    document.getElementById('margenVal').textContent = document.getElementById('margenBase').value + '%';
+  }
+
+  function actualizarOverheadPreview() {
+    document.getElementById('overheadVal').textContent = document.getElementById('overheadBase').value + '%';
+  }
+
+  function actualizarStats() {
+    const proyectos = JSON.parse(localStorage.getItem('cotipro_proyectos') || '[]');
+    const materiales = JSON.parse(localStorage.getItem('cotipro_materiales') || '[]');
+    const valorTotal = proyectos.reduce((sum, p) => sum + (p.total || 0), 0);
+
+    document.getElementById('statCotizaciones').textContent = proyectos.length;
+    document.getElementById('statValorTotal').textContent = fmt(valorTotal);
+    document.getElementById('statMateriales').textContent = materiales.length;
+  }
+
+  function guardarAjustes() {
+    const ajustes = {
+      tarifaHora: parseFloat(document.getElementById('tarifaHora').value) || 35000,
+      horasXm2: parseFloat(document.getElementById('horasXm2').value) || 2.5,
+      horasPequeno: parseFloat(document.getElementById('horasPequeno').value) || 8,
+      margenBase: parseInt(document.getElementById('margenBase').value) || 30,
+      overheadBase: parseInt(document.getElementById('overheadBase').value) || 15,
+      nombreNegocio: document.getElementById('nombreNegocio').value,
+      telefono: document.getElementById('telefono').value,
+      direccion: document.getElementById('direccion').value,
+      notas: document.getElementById('notas').value,
+    };
+
+    localStorage.setItem('cotipro_ajustes', JSON.stringify(ajustes));
+    mostrarToast('✅ Ajustes guardados correctamente');
+  }
+
+  function exportarDatos() {
+    const datos = {
+      proyectos: JSON.parse(localStorage.getItem('cotipro_proyectos') || '[]'),
+      materiales: JSON.parse(localStorage.getItem('cotipro_materiales') || '[]'),
+      ajustes: JSON.parse(localStorage.getItem('cotipro_ajustes') || '{}'),
+      exportDate: new Date().toISOString(),
+    };
+
+    const blob = new Blob([JSON.stringify(datos, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vikingos_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    mostrarToast('📥 Datos exportados correctamente');
+  }
+
+  function importarDatos() {
+    document.getElementById('importFile').click();
+  }
+
+  function handleImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const datos = JSON.parse(e.target.result);
+        if (datos.proyectos) localStorage.setItem('cotipro_proyectos', JSON.stringify(datos.proyectos));
+        if (datos.materiales) localStorage.setItem('cotipro_materiales', JSON.stringify(datos.materiales));
+        if (datos.ajustes) localStorage.setItem('cotipro_ajustes', JSON.stringify(datos.ajustes));
+        cargarAjustes();
+        mostrarToast('📤 Datos importados correctamente');
+      } catch (err) {
+        mostrarToast('❌ Error al importar: archivo inválido');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function resetDatos() {
+    if (!confirm('¿Estás seguro? Esto eliminará TODOS los datos guardados.')) return;
+    if (!confirm('Esta acción no se puede deshacer. ¿Continuar?')) return;
+
+    localStorage.removeItem('cotipro_proyectos');
+    localStorage.removeItem('cotipro_materiales');
+    localStorage.removeItem('cotipro_ajustes');
+    localStorage.removeItem('cotipro_en_proceso');
+    cargarAjustes();
+    mostrarToast('🗑️ Todos los datos han sido eliminados');
+  }
+
+  function mostrarToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  cargarAjustes();
+</script>
+</body>
+</html>

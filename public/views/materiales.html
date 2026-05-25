@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Vikingos — Catálogo de Materiales</title>
+  <link rel="stylesheet" href="../styles/estilos.css"/>
+</head>
+<body>
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar"></aside>
+
+  <main class="main-area">
+    <div class="topbar">
+      <div>
+        <div class="page-title">Catálogo de Materiales</div>
+        <div class="page-sub" id="subtitulo">Gestiona precios y stock</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-primary" onclick="mostrarFormulario()">+ Agregar Material</button>
+        <button class="btn btn-ghost" onclick="subirDocumento()">📤 Subir Documento</button>
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="g-filters" id="filtros">
+        <span style="font-size:12px;color:var(--muted);">Filtrar:</span>
+        <div class="f-chip active" data-cat="todos" onclick="filtrar(this)">🗂 Todos</div>
+        <div class="f-chip" data-cat="madera" onclick="filtrar(this)">🪵 Maderas</div>
+        <div class="f-chip" data-cat="mdf" onclick="filtrar(this)">📦 MDF/Tableros</div>
+        <div class="f-chip" data-cat="herraje" onclick="filtrar(this)">🔩 Herrajes</div>
+        <div class="f-chip" data-cat="accesorio" onclick="filtrar(this)">🔧 Accesorios</div>
+        <div class="f-chip" data-cat="acabad" onclick="filtrar(this)">🎨 Acabados</div>
+      </div>
+
+      <div class="stats-row" style="grid-template-columns:repeat(3,1fr);margin-bottom:24px;">
+        <div class="stat-card">
+          <div class="stat-lbl">Total Materiales</div>
+          <div class="stat-val" id="statTotal">0</div>
+          <div class="stat-sub">registrados</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Valor Inventario</div>
+          <div class="stat-val" id="statValor">$0</div>
+          <div class="stat-sub">suma total</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-lbl">Stock Bajo</div>
+          <div class="stat-val" id="statAlerta" style="color:var(--danger);">0</div>
+          <div class="stat-sub">requieren pedido</div>
+        </div>
+      </div>
+
+      <div class="section">
+        <div style="overflow-x:auto;">
+          <table class="rec-table">
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Categoría</th>
+                <th>Unidad</th>
+                <th>Precio Unit.</th>
+                <th>Stock</th>
+                <th>Proveedor</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="tablaMateriales">
+              <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px;">Cargando...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div id="modalForm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;">
+  <div class="section" style="width:480px;max-width:95vw;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+      <div class="section-title" style="margin:0;border:none;padding:0;">+ Agregar/Editar Material</div>
+      <button onclick="cerrarFormulario()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;">✕</button>
+    </div>
+    <div class="g2">
+      <div class="field">
+        <label>Nombre del Material</label>
+        <input type="text" id="matNombre" placeholder="Ej: MDF 15mm Blanco"/>
+      </div>
+      <div class="field">
+        <label>Categoría</label>
+        <select id="matCategoria">
+          <option value="madera">🪵 Madera</option>
+          <option value="mdf">📦 MDF/Tableros</option>
+          <option value="herraje">🔩 Herrajes</option>
+          <option value="accesorio">🔧 Accesorios</option>
+          <option value="acabad">🎨 Acabados</option>
+        </select>
+      </div>
+    </div>
+    <div class="g3" style="margin-top:14px;">
+      <div class="field">
+        <label>Unidad</label>
+        <select id="matUnidad">
+          <option value="und">und</option>
+          <option value="m2">m²</option>
+          <option value="ml">ml</option>
+          <option value="lam">lam</option>
+          <option value="var">var</option>
+          <option value="lit">lit</option>
+          <option value="kg">kg</option>
+          <option value="cja">cja</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Precio Unitario</label>
+        <input type="number" id="matPrecio" placeholder="0"/>
+      </div>
+      <div class="field">
+        <label>Stock Mínimo</label>
+        <input type="number" id="matStock" placeholder="0"/>
+      </div>
+    </div>
+    <div class="field" style="margin-top:14px;">
+      <label>Proveedor</label>
+      <input type="text" id="matProveedor" placeholder="Nombre del proveedor"/>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="cerrarFormulario()">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarMaterial()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="fileInput" style="display:none;" accept=".csv,.xlsx,.xls" onchange="procesarArchivo(this)"/>
+
+<script src="../config/routes.js"></script>
+<script src="../components/navbar.js"></script>
+<script>
+  renderSidebar('catalogo');
+
+  const CAT_ICON = {madera:'🪵',mdf:'📦',herraje:'🔩',accesorio:'🔧',acabad:'🎨'};
+  const CAT_LABEL = {madera:'Madera',mdf:'MDF/Tableros',herraje:'Herrajes',accesorio:'Accesorios',acabad:'Acabados'};
+  const fmt = n => '$ ' + Math.round(n||0).toLocaleString('es-CO');
+
+  let materiales = [];
+  let editIndex = -1;
+  let filtroActual = 'todos';
+
+  function cargar() {
+    materiales = JSON.parse(localStorage.getItem('cotipro_materiales') || '[]');
+
+    if (materiales.length === 0) {
+      materiales = [
+        {nombre:'MDF 15mm Blanco', categoria:'mdf', unidad:'lam', precio:85000, stock:25, proveedor:'Maderkit'},
+        {nombre:'MDF 18mm Nogal', categoria:'mdf', unidad:'lam', precio:95000, stock:18, proveedor:'Maderkit'},
+        {nombre:'Pino cepillado 2x4"', categoria:'madera', unidad:'ml', precio:12000, stock:50, proveedor:'Madera El Roble'},
+        {nombre:'Bisagra cazoleta 35mm', categoria:'herraje', unidad:'und', precio:3500, stock:100, proveedor:'Ferrasa'},
+        {nombre:'Barniz transparente 1L', categoria:'acabad', unidad:'lit', precio:45000, stock:12, proveedor:'Sayer'},
+      ];
+      localStorage.setItem('cotipro_materiales', JSON.stringify(materiales));
+    }
+
+    actualizarStats();
+    renderTabla();
+  }
+
+  function actualizarStats() {
+    document.getElementById('statTotal').textContent = materiales.length;
+    const totalValor = materiales.reduce((sum, m) => sum + (m.precio * m.stock), 0);
+    document.getElementById('statValor').textContent = fmt(totalValor);
+    const stockBajo = materiales.filter(m => m.stock < 10).length;
+    document.getElementById('statAlerta').textContent = stockBajo;
+    document.getElementById('subtitulo').textContent = `${materiales.length} materiales registrados`;
+  }
+
+  function filtrar(el) {
+    document.querySelectorAll('.f-chip').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    filtroActual = el.dataset.cat;
+    renderTabla();
+  }
+
+  function renderTabla() {
+    const lista = filtroActual === 'todos' ? materiales : materiales.filter(m => m.categoria === filtroActual);
+    const tbody = document.getElementById('tablaMateriales');
+
+    if (lista.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:30px;">No hay materiales en esta categoría</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = lista.map((m, i) => {
+      const realIndex = materiales.indexOf(m);
+      const stockClass = m.stock < 10 ? 'style="color:var(--danger);font-weight:600;"' : '';
+      return `
+        <tr>
+          <td><span class="rec-name">${m.nombre}</span></td>
+          <td><span class="rec-cat">${CAT_ICON[m.categoria]} ${CAT_LABEL[m.categoria]}</span></td>
+          <td><span class="rec-size">${m.unidad}</span></td>
+          <td><span class="rec-total">${fmt(m.precio)}</span></td>
+          <td><span ${stockClass}>${m.stock}</span></td>
+          <td><span class="rec-size">${m.proveedor || '—'}</span></td>
+          <td>
+            <button class="btn btn-ghost btn-sm" onclick="editarMaterial(${realIndex})">✏️</button>
+            <button class="btn btn-danger btn-sm" onclick="eliminarMaterial(${realIndex})">🗑️</button>
+          </td>
+        </tr>`;
+    }).join('');
+  }
+
+  function mostrarFormulario(idx = -1) {
+    editIndex = idx;
+    document.getElementById('modalForm').style.display = 'flex';
+    if (idx >= 0) {
+      const m = materiales[idx];
+      document.getElementById('matNombre').value = m.nombre;
+      document.getElementById('matCategoria').value = m.categoria;
+      document.getElementById('matUnidad').value = m.unidad;
+      document.getElementById('matPrecio').value = m.precio;
+      document.getElementById('matStock').value = m.stock;
+      document.getElementById('matProveedor').value = m.proveedor || '';
+    } else {
+      document.getElementById('matNombre').value = '';
+      document.getElementById('matCategoria').value = 'madera';
+      document.getElementById('matUnidad').value = 'und';
+      document.getElementById('matPrecio').value = '';
+      document.getElementById('matStock').value = '';
+      document.getElementById('matProveedor').value = '';
+    }
+    document.getElementById('matNombre').focus();
+  }
+
+  function cerrarFormulario() {
+    document.getElementById('modalForm').style.display = 'none';
+  }
+
+  function editarMaterial(idx) {
+    mostrarFormulario(idx);
+  }
+
+  function guardarMaterial() {
+    const nombre = document.getElementById('matNombre').value.trim();
+    if (!nombre) { mostrarToast('⚠️ Ingresa el nombre del material'); return; }
+
+    const material = {
+      nombre,
+      categoria: document.getElementById('matCategoria').value,
+      unidad: document.getElementById('matUnidad').value,
+      precio: parseFloat(document.getElementById('matPrecio').value) || 0,
+      stock: parseInt(document.getElementById('matStock').value) || 0,
+      proveedor: document.getElementById('matProveedor').value.trim(),
+    };
+
+    if (editIndex >= 0) {
+      materiales[editIndex] = material;
+    } else {
+      materiales.push(material);
+    }
+
+    localStorage.setItem('cotipro_materiales', JSON.stringify(materiales));
+    cerrarFormulario();
+    actualizarStats();
+    renderTabla();
+    mostrarToast('✅ Material guardado');
+  }
+
+  function eliminarMaterial(idx) {
+    if (!confirm('¿Eliminar este material?')) return;
+    materiales.splice(idx, 1);
+    localStorage.setItem('cotipro_materiales', JSON.stringify(materiales));
+    actualizarStats();
+    renderTabla();
+    mostrarToast('🗑️ Material eliminado');
+  }
+
+  function mostrarToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2800);
+  }
+
+  function subirDocumento() {
+    document.getElementById('fileInput').click();
+  }
+
+  function procesarArchivo(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      const text = e.target.result;
+      const lines = text.split('\n').filter(line => line.trim());
+      if (lines.length < 2) {
+        mostrarToast('⚠️ El archivo debe tener al menos una fila de datos');
+        return;
+      }
+      const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+      const expected = ['nombre', 'categoria', 'unidad', 'precio', 'stock', 'proveedor'];
+      const valid = expected.every(h => headers.includes(h));
+      if (!valid) {
+        mostrarToast('⚠️ El CSV debe tener columnas: nombre,categoria,unidad,precio,stock,proveedor');
+        return;
+      }
+      let added = 0;
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(',');
+        if (cols.length >= 6) {
+          const material = {
+            nombre: cols[0].trim(),
+            categoria: cols[1].trim(),
+            unidad: cols[2].trim(),
+            precio: parseFloat(cols[3].trim()) || 0,
+            stock: parseInt(cols[4].trim()) || 0,
+            proveedor: cols[5].trim()
+          };
+          materiales.push(material);
+          added++;
+        }
+      }
+      if (added > 0) {
+        localStorage.setItem('cotipro_materiales', JSON.stringify(materiales));
+        actualizarStats();
+        renderTabla();
+        mostrarToast(`✅ ${added} materiales agregados desde el archivo`);
+      } else {
+        mostrarToast('⚠️ No se agregaron materiales');
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  cargar();
+</script>
+</body>
+</html>
