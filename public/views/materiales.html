@@ -4,7 +4,9 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Vikingos — Catálogo de Materiales</title>
-  <link rel="stylesheet" href="../styles/estilos.css"/>
+  <link rel="stylesheet" href="../styles/base.css"/>
+  <link rel="stylesheet" href="../styles/layout.css"/>
+  <link rel="stylesheet" href="../styles/components.css"/>
 </head>
 <body>
 <div class="app-layout">
@@ -134,9 +136,9 @@
 </div>
 
 <input type="file" id="fileInput" style="display:none;" accept=".csv,.xlsx,.xls" onchange="procesarArchivo(this)"/>
-
 <script src="../config/routes.js"></script>
-<script src="../components/navbar.js"></script>
+
+  <script src="../shared/navbar.js"></script>
 <script>
   renderSidebar('catalogo');
 

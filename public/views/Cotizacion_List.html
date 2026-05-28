@@ -4,8 +4,9 @@
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Vikingos — Cotizaciones</title>
-  <link rel="stylesheet" href="../estilos.css"/>
-  <link rel="stylesheet" href="../pages/Css/cotizacion.css"/>
+  <link rel="stylesheet" href="../styles/base.css"/>
+  <link rel="stylesheet" href="../styles/layout.css"/>
+  <link rel="stylesheet" href="../styles/components.css"/>
   <style>
     .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .filtros-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -117,11 +118,11 @@
 <div class="toast" id="toast"></div>
 
 <script src="../config/routes.js"></script>
-<script src="../components/navbar.js"></script>
-<script src="../models/Cotizacion.js"></script>
-<script src="../controllers/CotizacionController.js"></script>
+<script src="../shared/navbar.js"></script>
+<script src="../modules/cotizaciones/Cotizacion.model.js"></script>
+<script src="../modules/cotizaciones/Cotizacion.controller.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="../utils/PDFGenerator.js"></script>
+<script src="../shared/pdf.js"></script>
 <script>
   renderSidebar('cotizaciones');
 
