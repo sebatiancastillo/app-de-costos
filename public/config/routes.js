@@ -14,15 +14,7 @@ const ROUTES = {
     nested: '../../index.html'
   },
 
-  // ── Cotizaciones
-  COTIZACIONES: {
-    id: 'cotizaciones',
-    label: 'Cotizaciones',
-    icon: '📋',
-    root: 'views/CotizacionList.html',
-    nested: '../../views/CotizacionList.html'
-  },
-
+  
   COTIZAR: {
     id: 'cotizar',
     label: 'Nueva Cotización',
@@ -31,6 +23,15 @@ const ROUTES = {
     nested: 'cotizar.html'
   },
 
+    // ── Cotizaciones
+  COTIZACIONES: {
+    id: 'cotizaciones',
+    label: 'Cotizaciones',
+    icon: '📋',
+    root: 'views/Cotizacion_List.html',
+    nested: '../../views/Cotizacion_List.html'
+  },
+  
   COTIZACION_EN_PROCESO: {
     id: 'cotizacion_en_proceso',
     label: 'En Proceso',
@@ -38,11 +39,11 @@ const ROUTES = {
     root: 'views/cotizacion_en_proceso.html',
     nested: 'cotizacion_en_proceso.html'
   },
-
+  
   // ── Proyectos y Galería
   PROYECTOS: {
     id: 'proyectos',
-    label: 'Galería Muebles',
+    label: 'Proyectos',
     icon: '🪑',
     root: 'views/proyectos.html',
     nested: 'proyectos.html'
@@ -51,7 +52,7 @@ const ROUTES = {
   // ── Catálogo
   CATALOGO: {
     id: 'catalogo',
-    label: 'Catálogo Materiales',
+    label: 'proveedores',
     icon: '📦',
     root: 'views/materiales.html',
     nested: 'materiales.html'
@@ -60,7 +61,7 @@ const ROUTES = {
   // ── Configuración
   AJUSTES: {
     id: 'ajustes',
-    label: 'Configuración',
+    label: 'ajustes',
     icon: '⚙️',
     root: 'views/ajustes.html',
     nested: 'ajustes.html'
@@ -106,7 +107,7 @@ function getNavItems(isNested = false) {
 function isPageNested() {
   const currentPath = window.location.pathname;
   // Si la ruta contiene /views/ o /components/ o /etc, está anidada
-  return currentPath.includes('/views/') || currentPath.includes('/controllers/');
+  return currentPath.includes('/views/') || currentPath.includes('/modules/');
 }
 
 /**
