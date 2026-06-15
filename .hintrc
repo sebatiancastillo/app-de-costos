@@ -22,7 +22,9 @@
       "default",
       {
         "ignore": [
-          "backdrop-filter"
+          "backdrop-filter",
+          "user-select",
+          "min-width: fit-content"
         ]
       }
     ]

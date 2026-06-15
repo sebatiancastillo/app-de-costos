@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cotización - Vikingos Carpintería</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#faf8f5;color:#1a1a1a;font-family:'DM Sans',sans-serif;font-size:15px;line-height:1.6;min-height:100vh}
+.container{max-width:680px;margin:0 auto;padding:48px 24px 32px}
+.logo-block{text-align:center;margin-bottom:40px}
+.logo-main{font-family:'Playfair Display',serif;font-size:36px;font-weight:900;color:#7a4f2d;letter-spacing:3px;line-height:1}
+.logo-sub{font-family:'DM Sans',sans-serif;font-size:11px;color:#a67c52;letter-spacing:4px;text-transform:uppercase;margin-top:4px}
+.title-section{text-align:center;margin-bottom:32px;padding-bottom:24px;border-bottom:2px solid #e8d5c4}
+.title-cotizacion{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;color:#1a1a1a;letter-spacing:1px}
+.cotizacion-numero{font-size:13px;color:#7a4f2d;font-weight:500;margin-top:6px;letter-spacing:0.5px}
+.fechas-row{display:flex;justify-content:center;gap:24px;margin-top:8px;font-size:12px;color:#666}
+.section{margin-bottom:28px}
+.section-title{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:#7a4f2d;margin-bottom:10px;padding-bottom:4px;border-bottom:1px solid #e8d5c4}
+.data-row{display:flex;padding:4px 0;font-size:14px}
+.data-label{color:#666;min-width:100px;flex-shrink:0}
+.data-value{color:#1a1a1a;font-weight:500}
+.descripcion-texto{font-size:14px;color:#333;line-height:1.7;margin-top:4px}
+.tag-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{background:#ede4d9;color:#5a3f22;font-size:12px;padding:3px 10px;border-radius:3px}
+.cost-table{width:100%;border-collapse:collapse;margin-top:4px}
+.cost-table td{padding:10px 0;border-bottom:1px solid #e8d5c4;font-size:14px}
+.cost-table td:last-child{text-align:right;font-weight:500}
+.cost-table tr:last-child td{border-bottom:none}
+.cost-table .total-row td{padding-top:14px;font-weight:700;font-size:16px;color:#7a4f2d;border-top:2px solid #7a4f2d;border-bottom:none}
+.terms-box{background:#ede4d9;padding:14px 16px;border-radius:4px;font-size:13px;color:#333;line-height:1.7;margin-top:4px}
+.footer{margin-top:40px;padding-top:20px;border-top:1px solid #e8d5c4;text-align:center}
+.footer-contact{font-size:13px;color:#666;margin-bottom:16px}
+.footer-contact span{display:inline-block;margin:0 10px}
+.footer-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;font-size:13px;font-weight:500;font-family:'DM Sans',sans-serif;border-radius:4px;cursor:pointer;text-decoration:none;transition:all .15s;border:1px solid}
+.btn-pdf{background:#7a4f2d;color:#fff;border-color:#5a3f22}
+.btn-pdf:hover{background:#5a3f22}
+.btn-whatsapp{background:#25D366;color:#fff;border-color:#1da851}
+.btn-whatsapp:hover{background:#1da851}
+.btn:active{transform:scale(.97)}
+.not-found{text-align:center;padding:80px 20px}
+.not-found h2{font-family:'Playfair Display',serif;font-size:28px;color:#7a4f2d;margin-bottom:8px}
+.not-found p{color:#888;font-size:15px}
+.loading{text-align:center;padding:80px 20px;color:#888;font-size:15px}
+.loading .spinner{display:inline-block;width:28px;height:28px;border:3px solid #e8d5c4;border-top-color:#7a4f2d;border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.medidas-text{font-size:14px;color:#333}
+@media(max-width:480px){
+  .container{padding:24px 16px 24px}
+  .logo-main{font-size:28px}
+  .title-cotizacion{font-size:22px}
+  .data-row{flex-direction:column;padding:6px 0}
+  .data-label{min-width:auto}
+  .fechas-row{flex-direction:column;gap:4px;align-items:center}
+  .footer-actions{flex-direction:column;align-items:center}
+  .btn{width:100%;justify-content:center}
+}
+@media print{
+  body{background:#fff}
+  .container{padding:20px 0}
+  .btn{display:none}
+  .footer-actions{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="container" id="app"></div>
+
+<script src="../config/routes.js"></script>
+<script src="../shared/calculos.js"></script>
+<script src="../modules/cotizaciones/Cotizacion.model.js"></script>
+<script src="../modules/cotizaciones/Cotizacion.controller.js"></script>
+<script src="../shared/pdf.js"></script>
+<script>
+(function() {
+  const app = document.getElementById('app');
+
+  function esc(str) {
+    if (str == null) return '';
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function safeVal(obj, nestedPath, fallback) {
+    const parts = nestedPath.split('.');
+    let v = obj;
+    for (const p of parts) {
+      if (v == null || typeof v !== 'object') return fallback;
+      v = v[p];
+    }
+    return (v != null && v !== '') ? v : fallback;
+  }
+
+  function getMedidasStr(c) {
+    const m = c.especificaciones?.medidas;
+    if (m && (m.largo || m.ancho || m.alto)) {
+      const parts = [];
+      if (m.largo) parts.push(m.largo + ' cm');
+      if (m.ancho) parts.push(m.ancho + ' cm');
+      if (m.alto) parts.push(m.alto + ' cm');
+      if (m.grosor) parts.push('grosor ' + m.grosor + ' cm');
+      return parts.join(' × ');
+    }
+    if (c.ancho || c.alto || c.fondo) {
+      const parts = [];
+      if (c.ancho) parts.push(c.ancho + ' cm');
+      if (c.alto) parts.push(c.alto + ' cm');
+      if (c.fondo) parts.push(c.fondo + ' cm');
+      return parts.join(' × ');
+    }
+    return '';
+  }
+
+  function getAcabados(c) {
+    const arr = c.especificaciones?.acabados;
+    if (Array.isArray(arr) && arr.length) return arr;
+    if (c.colorNombre) return [c.colorNombre];
+    return [];
+  }
+
+  function getMaterialPrincipal(c) {
+    return safeVal(c, 'especificaciones.materialPrincipal', '') || safeVal(c, 'especificaciones.especieMadera', '');
+  }
+
+  function getNumero(c, original) {
+    const n = safeVal(c, 'numero', '');
+    if (n) return n;
+    if (original && original.numero) return original.numero;
+    return 'COT-' + (c.id || '');
+  }
+
+  function getFechaValidez(fechaCreacion) {
+    if (!fechaCreacion) return '';
+    const d = new Date(fechaCreacion);
+    if (isNaN(d.getTime())) return '';
+    d.setDate(d.getDate() + 30);
+    return d.toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
+  }
+
+  function getCosto(c, key) {
+    if (c.costos && c.costos[key] != null) return c.costos[key];
+    return 0;
+  }
+
+  function getTotalPrecio(c, original) {
+    if (c.costos?.precioFinal != null) return c.costos.precioFinal;
+    if (original?.costos?.total != null) return original.costos.total;
+    if (c.costos?.total != null) return c.costos.total;
+    return 0;
+  }
+
+  function renderCotizacion(c, original) {
+    const numero = getNumero(c, original);
+    const fechaEmision = c.fechaCreacion ? formatFecha(c.fechaCreacion) : '';
+    const fechaValidez = c.fechaCreacion ? getFechaValidez(c.fechaCreacion) : '';
+    const clienteNombre = safeVal(c, 'cliente.nombre', '') || safeVal(c, 'cliente', '');
+    const clienteDireccion = safeVal(c, 'cliente.direccion', '') || safeVal(c, 'direccion', '');
+    const proyectoNombre = safeVal(c, 'proyecto.nombre', '') || safeVal(c, 'proyecto', '');
+    const proyectoDescripcion = safeVal(c, 'proyecto.descripcion', '') || safeVal(c, 'descripcion', '');
+    const materiales = getCosto(c, 'materiales') || (original?.costos?.materiales || 0);
+    const manoObra = getCosto(c, 'manoObra') || (original?.costos?.manoObra || 0);
+    const transporte = getCosto(c, 'transporte') || 0;
+    const total = getTotalPrecio(c, original);
+    const tiempoEntrega = safeVal(c, 'costos.tiempoEstimadoDias', '') || safeVal(c, 'tiempoEntrega', '');
+    const notas = c.notas || '';
+    const acabados = getAcabados(c);
+    const materialPrincipal = getMaterialPrincipal(c);
+    const medidasStr = getMedidasStr(c);
+    const colorTono = safeVal(c, 'especificaciones.colorTono', '') || safeVal(c, 'colorNombre', '');
+
+    function fmt(n) {
+      try { return formatCOP(n); } catch(e) { return '$ ' + Number(n||0).toLocaleString('es-CO'); }
+    }
+
+    const costRows = [
+      { label: 'Materiales', value: materiales },
+      { label: 'Mano de obra', value: manoObra },
+      { label: 'Transporte', value: transporte }
+    ];
+
+    app.innerHTML = `
+      <div class="logo-block">
+        <div class="logo-main">VIKINGOS</div>
+        <div class="logo-sub">Carpintería</div>
+      </div>
+
+      <div class="title-section">
+        <div class="title-cotizacion">COTIZACIÓN</div>
+        <div class="cotizacion-numero">${esc(numero)}</div>
+        <div class="fechas-row">
+          <span>Emisión: ${esc(fechaEmision)}</span>
+          <span>Válido hasta: ${esc(fechaValidez)}</span>
+        </div>
+      </div>
+
+      <div class="section">
+        <div class="section-title">Datos del Cliente</div>
+        <div class="data-row"><span class="data-label">Cliente</span><span class="data-value">${esc(clienteNombre)}</span></div>
+        ${clienteDireccion ? `<div class="data-row"><span class="data-label">Dirección</span><span class="data-value">${esc(clienteDireccion)}</span></div>` : ''}
+      </div>
+
+      <div class="section">
+        <div class="section-title">Proyecto</div>
+        <div class="data-row" style="margin-bottom:6px"><span class="data-value">${esc(proyectoNombre)}</span></div>
+        ${proyectoDescripcion ? `<div class="descripcion-texto">${esc(proyectoDescripcion)}</div>` : ''}
+      </div>
+
+      ${materialPrincipal || acabados.length || colorTono ? `
+      <div class="section">
+        <div class="section-title">Materiales y Acabados</div>
+        ${materialPrincipal ? `<div class="data-row"><span class="data-label">Material</span><span class="data-value">${esc(materialPrincipal)}</span></div>` : ''}
+        ${colorTono ? `<div class="data-row"><span class="data-label">Color/Tono</span><span class="data-value">${esc(colorTono)}</span></div>` : ''}
+        ${acabados.length ? `<div class="data-row"><span class="data-label">Acabados</span><div class="tag-list">${acabados.map(a => `<span class="tag">${esc(a)}</span>`).join('')}</div></div>` : ''}
+      </div>` : ''}
+
+      ${medidasStr ? `
+      <div class="section">
+        <div class="section-title">Medidas</div>
+        <div class="medidas-text">${esc(medidasStr)}</div>
+      </div>` : ''}
+
+      <div class="section">
+        <div class="section-title">Costos</div>
+        <table class="cost-table">
+          ${costRows.filter(r => r.value > 0).map(r => `
+            <tr><td>${esc(r.label)}</td><td>${fmt(r.value)}</td></tr>
+          `).join('')}
+          ${costRows.every(r => r.value === 0) ? '<tr><td style="color:#999">Sin costos detallados</td><td>—</td></tr>' : ''}
+          <tr class="total-row"><td>Total</td><td>${fmt(total)}</td></tr>
+        </table>
+      </div>
+
+      ${tiempoEntrega ? `
+      <div class="section">
+        <div class="section-title">Tiempo Estimado de Entrega</div>
+        <div class="data-value">${esc(tiempoEntrega)} días hábiles</div>
+      </div>` : ''}
+
+      ${notas ? `
+      <div class="section">
+        <div class="section-title">Notas Adicionales</div>
+        <div class="descripcion-texto">${esc(notas)}</div>
+      </div>` : ''}
+
+      <div class="section">
+        <div class="section-title">Términos y Condiciones</div>
+        <div class="terms-box">
+          Válido por 30 días. El anticipo del 50% es requerido para iniciar producción.
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="footer-contact">
+          <span>📞 +57 300 123 4567</span>
+          <span>✉️ info@vikingoscarpinteria.com</span>
+        </div>
+        <div class="footer-actions">
+          <button class="btn btn-pdf" onclick="window.descargarPDF()">📄 Descargar PDF</button>
+          <a class="btn btn-whatsapp" href="https://wa.me/573001234567?text=${encodeURIComponent('Hola, vi la cotización ' + numero)}" target="_blank">💬 Contactar por WhatsApp</a>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderNotFound() {
+    app.innerHTML = '<div class="not-found"><h2>Cotización no encontrada</h2><p>El enlace que has seguido no es válido o la cotización ha sido eliminada.</p></div>';
+  }
+
+  function renderLoading() {
+    app.innerHTML = '<div class="loading"><div class="spinner"></div><p>Cargando cotización...</p></div>';
+  }
+
+  function aplanarParaPDF(c) {
+    if (c.cliente && typeof c.cliente === 'string') return c;
+    return {
+      id: c.id,
+      proyecto: c.proyecto?.nombre || c.proyecto || '',
+      cliente: c.cliente?.nombre || c.cliente || '',
+      telefono: c.cliente?.telefono || c.telefono || '',
+      direccion: c.cliente?.direccion || c.direccion || '',
+      descripcion: c.proyecto?.descripcion || c.descripcion || '',
+      categoria: c.proyecto?.tipo || c.categoria || 'otro',
+      tamano: c.tamano || '',
+      ancho: c.especificaciones?.medidas?.ancho || c.ancho || 0,
+      alto: c.especificaciones?.medidas?.alto || c.alto || 0,
+      fondo: c.especificaciones?.medidas?.largo || c.fondo || 0,
+      colorNombre: c.especificaciones?.colorTono || c.colorNombre || '',
+      tiempoEntrega: c.costos?.tiempoEstimadoDias || c.tiempoEntrega || 15,
+      materiales: c.materiales || [],
+      manoObra: c.manoObra || { tarea: '', horas: 0, colaborador: '', tarifa: 0 },
+      costos: {
+        materiales: c.costos?.materiales || c.costosOriginales?.materiales || 0,
+        manoObra: c.costos?.manoObra || c.costosOriginales?.manoObra || 0,
+        subtotal: (c.costos?.materiales || 0) + (c.costos?.manoObra || 0),
+        overheadMonto: c.costos?.overheadMonto || 0,
+        margenMonto: c.costos?.margenMonto || 0,
+        total: c.costos?.precioFinal || c.costos?.total || 0
+      },
+      overhead: c.overhead || 0,
+      margen: c.costos?.margenGanancia || c.margen || 30,
+      fechaCreacion: c.fechaCreacion,
+      estado: c.estado,
+      color: c.color || '#7a4f2d'
+    };
+  }
+
+  window.descargarPDF = function() {
+    const raw = window._cotizacionOriginal;
+    if (!raw) return;
+    if (raw.cliente && typeof raw.cliente === 'object' && raw.cliente.nombre !== undefined) {
+      PDFGenerator.generarCotizacion(aplanarParaPDF(raw));
+    } else {
+      PDFGenerator.generarCotizacion(raw);
+    }
+  };
+
+  function init() {
+    const id = getUrlParam('id');
+    if (!id) {
+      renderNotFound();
+      return;
+    }
+
+    renderLoading();
+
+    const raw = CotizacionController.obtenerPorId(id);
+    if (!raw) {
+      renderNotFound();
+      return;
+    }
+
+    window._cotizacionOriginal = raw;
+    const c = CotizacionModel.migrarPlanaANidada(raw);
+    renderCotizacion(c, raw);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

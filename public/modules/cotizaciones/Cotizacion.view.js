@@ -1,20 +1,18 @@
-
-  // ── Estado global del formulario ──
   let colorActual = { hex: '#7a4f2d', name: 'Nogal' };
   let sizeActual  = 'pequeño';
   let matId       = 1;
   let mediaFiles  = [];
+  let editandoId  = null;
 
-  // ── Formato de moneda COP ──
   const fmt = n => '$ ' + Math.round(n).toLocaleString('es-CO');
 
-  // ── Inicializar primer material ──
   window.addEventListener('DOMContentLoaded', () => {
-    agregarMaterial();
-    actualizarPreview();
+    if (document.getElementById('matBody')) {
+      agregarMaterial();
+      actualizarPreview();
+    }
   });
 
-  // ── Seleccionar tamaño ──
   function selSize(el) {
     document.querySelectorAll('.size-opt').forEach(o => o.classList.remove('sel'));
     el.classList.add('sel');
@@ -22,7 +20,6 @@
     actualizarPreview();
   }
 
-  // ── Seleccionar color ──
   function selColor(el) {
     document.querySelectorAll('.swatch').forEach(s => s.classList.remove('sel'));
     el.classList.add('sel');
@@ -44,10 +41,10 @@
       `<span class="dot" style="background:${colorActual.hex};"></span> ${colorActual.name} — <span style="color:var(--muted)">${colorActual.hex}</span>`;
   }
 
-  // ── Agregar fila de material ──
   function agregarMaterial() {
     const id = matId++;
     const tbody = document.getElementById('matBody');
+    if (!tbody) return;
     const tr = document.createElement('tr');
     tr.id = `mat-${id}`;
     tr.innerHTML = `
@@ -82,7 +79,6 @@
     actualizarPreview();
   }
 
-  // ── Calcular total de materiales ──
   function calcMateriales() {
     let total = 0;
     document.querySelectorAll('#matBody tr').forEach(tr => {
@@ -94,7 +90,6 @@
     return total;
   }
 
-  // ── Actualizar preview de costos ──
   function actualizarPreview() {
     const mat    = calcMateriales();
     const hours  = parseFloat(document.getElementById('laborHours').value) || 0;
@@ -122,7 +117,6 @@
     const name = document.getElementById('projectName').value;
     document.getElementById('prevName').textContent = name || '';
 
-    // Tags
     if (total > 0) {
       document.getElementById('tagsRow').style.display = 'flex';
       document.getElementById('tagGanancia').textContent = '✅ ' + fmt(mrgAmt);
@@ -132,7 +126,6 @@
       document.getElementById('tagsRow').style.display = 'none';
     }
 
-    // Spec summary
     actualizarSpecSummary();
   }
 
@@ -158,7 +151,6 @@
     document.getElementById('specTags').innerHTML = html;
   }
 
-  // ── Manejo de archivos multimedia ──
   function handleFiles(files) {
     Array.from(files).forEach(file => {
       const url = URL.createObjectURL(file);
@@ -193,7 +185,6 @@
     if (el) el.remove();
   }
 
-  // ── Guardar cotización ──
   function guardarCotizacion() {
     const name = document.getElementById('projectName').value.trim();
     if (!name) { mostrarToast('⚠️ Ingresa el nombre del proyecto'); return; }
@@ -228,7 +219,6 @@
       date:         new Date().toISOString().split('T')[0],
     };
 
-    // Guardar en localStorage
     const proyectos = JSON.parse(localStorage.getItem('cotipro_proyectos') || '[]');
     proyectos.unshift(proyecto);
     localStorage.setItem('cotipro_proyectos', JSON.stringify(proyectos));
@@ -237,7 +227,6 @@
     setTimeout(() => { window.location.href = 'proyectos.html'; }, 1500);
   }
 
-  // ── Limpiar formulario ──
   function limpiarForm() {
     document.getElementById('projectName').value = '';
     document.getElementById('client').value = '';
@@ -259,7 +248,6 @@
     mostrarToast('🗑️ Formulario limpiado');
   }
 
-  // ── Toast ──
   function mostrarToast(msg) {
     const t = document.getElementById('toast');
     t.textContent = msg;
@@ -267,15 +255,11 @@
     setTimeout(() => t.classList.remove('show'), 2800);
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // FUNCIONES DE EDICIÓN (V2)
-  // ═══════════════════════════════════════════════════════════════
-
   async function cargarModeloYControlador() {
     if (!window.CotizacionModel) {
       await new Promise(resolve => {
         const script = document.createElement('script');
-        script.src = 'models/Cotizacion.js';
+        script.src = '../modules/cotizaciones/Cotizacion.model.js';
         script.onload = resolve;
         document.head.appendChild(script);
       });
@@ -283,7 +267,7 @@
     if (!window.CotizacionController) {
       await new Promise(resolve => {
         const script = document.createElement('script');
-        script.src = 'controllers/CotizacionController.js';
+        script.src = '../modules/cotizaciones/Cotizacion.controller.js';
         script.onload = resolve;
         document.head.appendChild(script);
       });
@@ -292,17 +276,17 @@
 
   async function initEdicion() {
     const params = new URLSearchParams(window.location.search);
-    const editId = params.get('edit');
-    
+    const editId = params.get('edit') || params.get('id');
+
     if (editId) {
       await cargarModeloYControlador();
       const cotizacion = CotizacionController.obtenerPorId(editId);
-      
+
       if (!cotizacion) {
         mostrarToast('❌ Cotización no encontrada');
         return;
       }
-      
+
       if (!CotizacionModel.puedeEditar(cotizacion)) {
         mostrarToast('⚠️ Esta cotización no se puede editar en su estado actual');
         return;
@@ -321,31 +305,31 @@
     document.getElementById('address').value = c.direccion || '';
     document.getElementById('description').value = c.descripcion || '';
     document.getElementById('category').value = c.categoria || 'otro';
-    
+
     if (c.tamano) {
       const sizeEl = document.querySelector(`.size-opt[data-size="${c.tamano}"]`);
       if (sizeEl) selSize(sizeEl);
     }
-    
+
     if (c.ancho) document.getElementById('width').value = c.ancho;
     if (c.alto) document.getElementById('height').value = c.alto;
     if (c.fondo) document.getElementById('depth').value = c.fondo;
-    
+
     if (c.color) {
       const swatch = document.querySelector(`.swatch[data-color="${c.color}"]`);
       if (swatch) selColor(swatch);
       else { colorActual = { hex: c.color, name: c.colorNombre || 'Personalizado' }; actualizarColorNote(); }
     }
-    
+
     if (c.tiempoEntrega) document.getElementById('deliveryDays').value = c.tiempoEntrega;
-    
+
     if (c.manoObra) {
       document.getElementById('laborTask').value = c.manoObra.tarea || '';
       document.getElementById('laborHours').value = c.manoObra.horas || '';
       document.getElementById('laborCollaborator').value = c.manoObra.colaborador || '';
       document.getElementById('laborRate').value = c.manoObra.tarifa || '';
     }
-    
+
     if (c.overhead) {
       document.getElementById('overhead').value = c.overhead;
       document.getElementById('overheadVal').textContent = c.overhead + '%';
@@ -355,7 +339,6 @@
       document.getElementById('marginVal').textContent = c.margen + '%';
     }
 
-    // Cargar materiales
     document.getElementById('matBody').innerHTML = '';
     matId = 1;
     if (c.materiales && c.materiales.length > 0) {
@@ -375,25 +358,22 @@
     } else {
       agregarMaterial();
     }
-    
+
     actualizarPreview();
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // GUARDAR (crear o actualizar)
-  // ═══════════════════════════════════════════════════════════════
   const guardarOriginal = guardarCotizacion;
   guardarCotizacion = function() {
     const name = document.getElementById('projectName').value.trim();
     if (!name) { mostrarToast('⚠️ Ingresa el nombre del proyecto'); return; }
 
     const datos = obtenerDatosFormulario();
-    
+
     if (editandoId) {
       const result = CotizacionController.actualizar(editandoId, datos);
       if (result.success) {
         mostrarToast('✅ Cotización actualizada');
-        setTimeout(() => { window.location.href = '../views/CotizacionList.html'; }, 1500);
+        setTimeout(() => { window.location.href = 'Cotizacion_List.html'; }, 1500);
       } else {
         mostrarToast('❌ ' + (result.errores?.join(', ') || result.error));
       }
@@ -440,11 +420,299 @@
     };
   }
 
-  // ═══════════════════════════════════════════════════════════════
-  // INICIALIZAR CON EDICIÓN SI APLICA
-  // ═══════════════════════════════════════════════════════════════
   window.addEventListener('DOMContentLoaded', () => {
     agregarMaterial();
     actualizarPreview();
     initEdicion();
   });
+
+  class CotizacionView {
+    static renderListaCotizaciones(cotizaciones) {
+      if (!cotizaciones || cotizaciones.length === 0) {
+        return `<div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">Sin cotizaciones</div>
+          <div class="empty-sub">Crea una nueva cotización para empezar</div>
+        </div>`;
+      }
+
+      return cotizaciones.map(c => {
+        const cfg = CotizacionModel.getEstadoConfig(c.estado);
+        const fecha = new Date(c.fechaCreacion).toLocaleDateString('es-CO');
+        const total = c.costos?.total || 0;
+
+        return `<div class="cotiz-card">
+          <div class="cotiz-card-header">
+            <div>
+              <div class="cotiz-titulo">${c.proyecto}</div>
+              <div class="cotiz-id">#${c.id} · ${fecha}</div>
+            </div>
+            ${CotizacionView.renderEstadoBadge(c.estado)}
+          </div>
+          <div class="cotiz-info">
+            <div class="cotiz-info-item"><span>Cliente</span>${c.cliente || '—'}</div>
+            <div class="cotiz-info-item"><span>Categoría</span>${c.categoria || '—'}</div>
+            <div class="cotiz-info-item"><span>Entrega</span>${c.tiempoEntrega || '—'} días</div>
+          </div>
+          <div class="cotiz-total">${formatCOP(total)}</div>
+          <div class="cotiz-actions">
+            <button class="btn btn-sm" style="background:var(--card2);color:var(--cream);border:1px solid var(--border);" onclick="CotizacionView.verDetalle(${c.id})">👁️ Ver</button>
+            ${CotizacionModel.puedeEditar(c) ? `<button class="btn btn-sm btn-edit" onclick="CotizacionView.editar(${c.id})">✏️ Editar</button>` : ''}
+            <button class="btn btn-sm btn-duplicar" onclick="CotizacionView.duplicar(${c.id})">📋 Duplicar</button>
+            <button class="btn btn-sm btn-eliminar" onclick="CotizacionView.confirmarEliminar(${c.id})">🗑️</button>
+          </div>
+        </div>`;
+      }).join('');
+    }
+
+    static renderEstadoBadge(estado) {
+      const cfg = CotizacionModel.getEstadoConfig(estado);
+      return `<span class="cotiz-estado" style="background:${cfg.color}22;color:${cfg.color};border:1px solid ${cfg.color}44;">
+        ${cfg.icon} ${cfg.label}
+      </span>`;
+    }
+
+    static renderBotonesEstado(estadoActual) {
+      const permitidos = FLUJO_ESTADOS[estadoActual] || [];
+      if (permitidos.length === 0) return '';
+
+      return permitidos.map(est => {
+        const cfg = CotizacionModel.getEstadoConfig(est);
+        return `<button class="btn btn-sm btn-primary" onclick="CotizacionView.cambiarEstado(${estadoActual.id}, '${est}')">
+          ${cfg.icon} ${cfg.label}
+        </button>`;
+      }).join('');
+    }
+
+    static mostrarAlerta(mensaje, tipo) {
+      const toast = document.getElementById('toast');
+      if (!toast) return;
+      const iconos = { success: '✅', error: '❌', warning: '⚠️', info: 'ℹ️' };
+      toast.innerHTML = `${iconos[tipo] || 'ℹ️'} ${mensaje}`;
+      toast.className = 'toast show';
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => { toast.className = 'toast'; }, 3000);
+    }
+
+    static mostrarModal(titulo, contenido, acciones) {
+      const overlay = document.getElementById('modalConfirm') || (() => {
+        const d = document.createElement('div');
+        d.className = 'modal-overlay';
+        d.id = 'modalConfirm';
+        d.innerHTML = `<div class="modal">
+          <div class="modal-title" id="modalTitle"></div>
+          <div class="modal-body" id="modalBody"></div>
+          <div class="modal-actions" id="modalActions"></div>
+        </div>`;
+        document.body.appendChild(d);
+        return d;
+      })();
+
+      document.getElementById('modalTitle').textContent = titulo;
+      document.getElementById('modalBody').innerHTML = contenido;
+      const actionsDiv = document.getElementById('modalActions');
+      actionsDiv.innerHTML = (acciones || []).map(a =>
+        `<button class="btn ${a.clase || 'btn-ghost'}" onclick="${a.onclick}">${a.texto}</button>`
+      ).join('');
+
+      overlay.classList.add('show');
+    }
+
+    static verDetalle(id) { window.location.href = `cotizacion_en_proceso.html?id=${id}`; }
+    static editar(id) { window.location.href = `cotizar.html?id=${id}`; }
+
+    static duplicar(id) {
+      const r = CotizacionController.duplicar(id);
+      CotizacionView.mostrarAlerta(r.success ? '✅ Cotización duplicada' : ('❌ ' + r.error), r.success ? 'success' : 'error');
+      if (r.success && typeof aplicarFiltros === 'function') aplicarFiltros();
+    }
+
+    static confirmarEliminar(id) {
+      CotizacionView.mostrarModal('¿Eliminar cotización?', 'Esta acción no se puede deshacer.', [
+        { texto: 'Cancelar', clase: 'btn-ghost', onclick: 'CotizacionView.cerrarModal()' },
+        { texto: 'Eliminar', clase: 'btn-primary', onclick: `CotizacionView.eliminar(${id})` }
+      ]);
+    }
+
+    static eliminar(id) {
+      const r = CotizacionController.eliminar(id);
+      CotizacionView.mostrarAlerta(r.success ? '🗑️ Eliminada' : '❌ Error', r.success ? 'success' : 'error');
+      CotizacionView.cerrarModal();
+      if (r.success && typeof aplicarFiltros === 'function') aplicarFiltros();
+    }
+
+    static cambiarEstado(id, nuevoEstado) {
+      const r = CotizacionController.cambiarEstado(id, nuevoEstado);
+      CotizacionView.mostrarAlerta(
+        r.success ? `✅ Cambió a ${CotizacionModel.getEstadoLabel(nuevoEstado)}` : ('❌ ' + r.error),
+        r.success ? 'success' : 'error'
+      );
+      if (r.success) setTimeout(() => location.reload(), 1200);
+    }
+
+    static cerrarModal() {
+      const overlay = document.getElementById('modalConfirm');
+      if (overlay) overlay.classList.remove('show');
+    }
+
+    static renderPreview(d) {
+      if (!d) return;
+      const fmt = formatCOP;
+      const showDetails = document.getElementById('toggleDesgloseCostos')?.checked;
+      document.getElementById('previewCliente').textContent = d.cliente?.nombre || '—';
+      const waEl = document.getElementById('previewWhatsappCliente');
+      if (waEl) waEl.textContent = d.cliente?.whatsapp ? '📱 ' + d.cliente.whatsapp : '';
+      const ciEl = document.getElementById('previewCiudadCliente');
+      if (ciEl) ciEl.textContent = d.cliente?.ciudad ? '📍 ' + d.cliente.ciudad : '';
+      document.getElementById('previewProyecto').textContent = d.proyecto?.nombre || '—';
+      const dimEl = document.getElementById('previewDimensionesGenerales');
+      if (dimEl) {
+        const dg = d.proyecto?.dimensionesGenerales || {};
+        const parts = [];
+        if (dg.alto) parts.push(dg.alto + ' cm alto');
+        if (dg.ancho) parts.push(dg.ancho + ' cm ancho');
+        if (dg.profundo) parts.push(dg.profundo + ' cm prof');
+        dimEl.textContent = parts.length ? '📐 ' + parts.join(' × ') : '';
+      }
+      document.getElementById('previewTipoTrabajo').textContent = d.proyecto?.tipo || '—';
+      const valEl = document.getElementById('previewValidez');
+      if (valEl) valEl.textContent = d.proyecto?.validez ? '⏱ Válido por ' + d.proyecto.validez + ' días' : '';
+
+      const matLabel = { madera_solida: 'Madera sólida', mdf: 'MDF', melamina: 'Melamina', madera_recuperada: 'Madera recuperada', mixto: 'Mixto' };
+      document.getElementById('previewMaterial').textContent = matLabel[d.especificaciones?.materialPrincipal] || d.especificaciones?.materialPrincipal || '—';
+      document.getElementById('previewAcabado').textContent = (d.especificaciones?.acabados || []).join(', ') || '—';
+
+      const medidas = d.especificaciones?.medidas || {};
+      document.getElementById('previewMedidas').textContent =
+        [medidas.largo, medidas.ancho, medidas.alto].filter(Boolean).join(' × ') + (medidas.grosor ? ` (grosor ${medidas.grosor}mm)` : '') || '—';
+
+      const cs = d.costos || {};
+      const suma = (cs.materiales || 0) + (cs.manoObra || 0) + (cs.herrajes || 0) + (cs.herramientas || 0) + (cs.transporte || 0) + (cs.subcontratos || 0);
+
+      document.getElementById('previewCostoMateriales').textContent = fmt(cs.materiales || 0);
+      const herrajesEl = document.getElementById('previewCostoHerrajes');
+      if (herrajesEl) herrajesEl.textContent = fmt(cs.herrajes || 0);
+      document.getElementById('previewCostoManoObra').textContent = fmt(cs.manoObra || 0);
+      document.getElementById('previewCostoHerramientas').textContent = fmt(cs.herramientas || 0);
+      document.getElementById('previewCostoTransporte').textContent = fmt(cs.transporte || 0);
+      document.getElementById('previewCostoSubcontratos').textContent = fmt(cs.subcontratos || 0);
+      document.getElementById('previewSumaCostos').textContent = fmt(suma);
+      document.getElementById('previewMargen').textContent = (cs.margenGanancia || 0) + '%';
+
+      const pf = cs.precioFinal || CotizacionModel.calcularPrecioFinal(cs, cs.margenGanancia);
+      document.getElementById('previewPrecioFinal').textContent = fmt(pf);
+
+      const costoRow = document.getElementById('costoTransporteRow');
+      if (costoRow) costoRow.style.display = cs.transporte > 0 ? 'flex' : 'none';
+      const details = document.getElementById('previewDetails');
+      if (details) details.style.display = showDetails ? 'block' : 'none';
+    }
+
+    static mostrarModalChecklist(onConfirm) {
+      const items = [
+        'Información del cliente completa',
+        'Medidas verificadas',
+        'Material confirmado con disponibilidad',
+        'Fotos o referencias adjuntas',
+        'Costos revisados',
+        'Margen aplicado',
+        'Fecha de entrega realista'
+      ];
+
+      const overlay = document.getElementById('modalConfirm') || document.body.appendChild(
+        Object.assign(document.createElement('div'), { className: 'modal-overlay', id: 'modalConfirm' })
+      );
+      overlay.innerHTML = `
+        <div class="modal" style="max-width:480px;">
+          <div class="modal-title">Checklist antes de enviar</div>
+          <div class="modal-body">
+            ${items.map((txt, i) => `
+              <label class="checklist-item" data-idx="${i}">
+                <input type="checkbox" class="checklist-check" onchange="CotizacionView._onChecklistToggle()"/>
+                <span class="checklist-label">${txt}</span>
+              </label>
+            `).join('')}
+          </div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" onclick="CotizacionView.cerrarModal()">Cancelar</button>
+            <button class="btn btn-primary" id="checklistConfirmBtn" disabled onclick="CotizacionView._onChecklistConfirm()">Confirmar envío</button>
+          </div>
+        </div>`;
+      overlay.classList.add('show');
+      window._checklistOnConfirm = onConfirm;
+    }
+
+    static _onChecklistToggle() {
+      const checks = document.querySelectorAll('.checklist-check');
+      const allChecked = Array.from(checks).every(c => c.checked);
+      const btn = document.getElementById('checklistConfirmBtn');
+      if (btn) btn.disabled = !allChecked;
+      checks.forEach(c => {
+        c.closest('.checklist-item').classList.toggle('checked', c.checked);
+      });
+    }
+
+    static _onChecklistConfirm() {
+      if (typeof window._checklistOnConfirm === 'function') {
+        window._checklistOnConfirm();
+      }
+      CotizacionView.cerrarModal();
+    }
+
+    static recolectarDatosFormulario() {
+      const g = id => document.getElementById(id);
+      const v = id => g(id)?.value || '';
+      const n = id => parseFloat(g(id)?.value) || 0;
+
+      const acabados = Array.from(document.querySelectorAll('input[name="acabado"]:checked')).map(c => c.value);
+      const cortes = Array.from(document.querySelectorAll('input[name="corteEspecial"]:checked')).map(c => c.value);
+
+      return {
+        id: parseInt(g('editandoId')?.value) || null,
+        tipoCliente: v('tipoCliente'),
+        nombreCliente: v('nombreCliente'),
+        contactoPrincipal: v('contactoPrincipal'),
+        whatsapp: v('whatsapp'),
+        telefono: v('telefono'),
+        email: v('email'),
+        direccionEntrega: v('direccionEntrega'),
+        ciudad: v('ciudad'),
+        barrio: v('barrio'),
+        comoNosConocio: v('comoNosConocio'),
+        tipoTrabajo: v('tipoTrabajo'),
+        tipoTrabajoOtro: v('tipoTrabajoOtro'),
+        nombreProyecto: v('nombreProyecto'),
+        descripcionProyecto: v('descripcionProyecto'),
+        altoGeneral: n('altoGeneral'),
+        anchoGeneral: n('anchoGeneral'),
+        profundoGeneral: n('profundoGeneral'),
+        observaciones: v('observaciones'),
+        validezCotizacion: v('validezCotizacion'),
+        ubicacionInstalacion: g('ubicacionInterior')?.checked ? 'interior' : g('ubicacionExterior')?.checked ? 'exterior' : g('ubicacionHumeda')?.checked ? 'area_humeda' : 'otro',
+        fechaEntregaDeseada: v('fechaEntregaDeseada'),
+        materialPrincipal: v('materialPrincipal'),
+        especieMadera: v('especieMadera'),
+        acabados,
+        colorTono: v('colorTono'),
+        largo: n('largo'),
+        ancho: n('ancho'),
+        alto: n('alto'),
+        grosor: n('grosor'),
+        cortesEspeciales: cortes,
+        cantidadPiezas: n('cantidadPiezas') || 1,
+        nivelDificultad: g('nivelBasico')?.checked ? 'basico' : g('nivelMedio')?.checked ? 'medio' : 'alto',
+        requiereInstalacion: g('requiereInstalacion')?.checked || false,
+        distanciaKm: g('distanciaKm')?.value || 0,
+        costoMateriales: n('costoMateriales'),
+        costoManoObra: n('costoManoObra'),
+        costoHerrajes: n('costoHerrajes'),
+        costoHerramientas: n('costoHerramientas'),
+        costoTransporte: n('costoTransporte'),
+        costoSubcontratos: n('costoSubcontratos'),
+        tiempoEstimadoDias: n('tiempoEstimadoDias'),
+        margenGanancia: n('margenGanancia')
+      };
+    }
+  }
+
+  window.CotizacionView = CotizacionView;

@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CotiPro — Costos Carpintería</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<title>Vikingos — Cotización</title>
+<link rel="stylesheet" href="../styles/estilos.css"/>
+<link rel="stylesheet" href="../styles/cotizacion.css"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <style>
@@ -24,10 +25,6 @@ a{color:var(--amber)}
 
 /* Layout */
 .app{max-width:860px;margin:0 auto;padding:1.5rem 1rem 4rem}
-.header{display:flex;align-items:center;gap:12px;margin-bottom:1.5rem}
-.logo{width:44px;height:44px;background:var(--amber);border-radius:var(--radius-lg);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;flex-shrink:0}
-.header-text h1{font-size:20px;font-weight:700;color:var(--text)}
-.header-text p{font-size:13px;color:var(--text2);margin-top:1px}
 
 /* Tabs */
 .tabs{display:flex;gap:2px;margin-bottom:1.5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:4px;overflow-x:auto}
@@ -168,6 +165,9 @@ input[type=checkbox]{accent-color:var(--amber);width:16px;height:16px;cursor:poi
 </style>
 </head>
 <body>
+<div class="app-layout">
+<aside class="sidebar" id="sidebar"></aside>
+<main class="main-area">
 
 <div class="app">
   <div class="header">
@@ -224,7 +224,19 @@ input[type=checkbox]{accent-color:var(--amber);width:16px;height:16px;cursor:poi
 const state = {
   tab: 'materiales',
   proyecto: '',
-  cliente: '',
+  cliente: {
+    nombre: '',
+    tipoCliente: 'Cliente final',
+    documento: '',
+      direccion: '',
+    telefonoPrincipal: '',
+    telefonoSecundario: '',
+    email: '',
+    comoNosConocio: 'Google',
+    estadoCliente: 'Prospecto',
+    fechaPrimerContacto: '',
+    fechaUltimoContacto: ''
+  },
   materiales: [],
   manoObra: [],
   gastos: [],
@@ -441,17 +453,84 @@ function renderGastos() {
 // ─── COTIZACIÓN ──────────────────────────────────────────────────────────────
 function renderCotizacion() {
   const cb=costoBase(),gan=ganancia(),tot=totalFinal();
+  const tiposCliente = ['Cliente final', 'Empresa', 'Tienda', 'Arquitecto', 'Diseñador', 'Constructor'];
   return `
   <div class="card">
-    <div class="card-title"><i class="ti ti-user"></i> Datos del proyecto</div>
+    <div class="card-title"><i class="ti ti-briefcase"></i> Datos del proyecto</div>
     <div class="form-grid g2">
       <div>
         <div class="form-label">Nombre del proyecto</div>
         <input type="text" placeholder="Ej: Closet habitación principal" value="${esc(state.proyecto)}" oninput="state.proyecto=this.value">
       </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-user"></i> 👤 Datos básicos del cliente</div>
+    <div class="form-grid g2" style="margin-bottom:12px">
       <div>
-        <div class="form-label">Cliente</div>
-        <input type="text" placeholder="Nombre del cliente" value="${esc(state.cliente)}" oninput="state.cliente=this.value">
+        <div class="form-label">Nombre completo</div>
+        <input type="text" placeholder="Nombre del cliente" value="${esc(state.cliente.nombre)}" oninput="state.cliente.nombre=this.value">
+      </div>
+      <div>
+        <div class="form-label">Tipo de cliente</div>
+        <select onchange="state.cliente.tipoCliente=this.value">
+          ${tiposCliente.map(t => `<option value="${t}" ${state.cliente.tipoCliente===t?'selected':''}>${t}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-grid g2" style="margin-bottom:12px">
+      <div>
+        <div class="form-label">Documento (Cédula / NIT)</div>
+        <input type="text" placeholder="Ej: 1023456789" value="${esc(state.cliente.documento)}" oninput="state.cliente.documento=this.value">
+      </div>
+      <div>
+        <div class="form-label">Correo electrónico</div>
+        <input type="email" placeholder="cliente@ejemplo.com" value="${esc(state.cliente.email)}" oninput="state.cliente.email=this.value">
+      </div>
+    </div>
+    <div class="form-grid g2">
+      <div>
+        <div class="form-label">Teléfono principal</div>
+        <input type="tel" placeholder="Ej: +57 300 1234567" value="${esc(state.cliente.telefonoPrincipal)}" oninput="state.cliente.telefonoPrincipal=this.value">
+      </div>
+      <div>
+        <div class="form-label">Teléfono secundario</div>
+        <input type="tel" placeholder="Opcional" value="${esc(state.cliente.telefonoSecundario)}" oninput="state.cliente.telefonoSecundario=this.value">
+         <div class="form-grid g2">
+           <div>
+             <div class="form-label">Dirección</div>
+             <input type="text" placeholder="Ej: Calle 5 #12-34, Apto 201" value="${esc(state.cliente.direccion)}" oninput="state.cliente.direccion=this.value">
+           </div>
+         </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-briefcase"></i> 💼 Información comercial</div>
+    <div class="form-grid g2" style="margin-bottom:12px">
+      <div>
+        <div class="form-label">Cómo nos conoció</div>
+        <select onchange="state.cliente.comoNosConocio=this.value">
+          ${['Facebook', 'Instagram', 'WhatsApp', 'Referido', 'Google', 'Otro'].map(o => `<option value="${o}" ${state.cliente.comoNosConocio===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div>
+        <div class="form-label">Estado del cliente</div>
+        <select onchange="state.cliente.estadoCliente=this.value">
+          ${['Prospecto', 'Cotizado', 'Cliente activo', 'Cliente recurrente', 'Inactivo'].map(e => `<option value="${e}" ${state.cliente.estadoCliente===e?'selected':''}>${e}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-grid g2">
+      <div>
+        <div class="form-label">Fecha de primer contacto</div>
+        <input type="date" value="${state.cliente.fechaPrimerContacto}" oninput="state.cliente.fechaPrimerContacto=this.value">
+      </div>
+      <div>
+        <div class="form-label">Fecha de último contacto</div>
+        <input type="date" value="${state.cliente.fechaUltimoContacto}" oninput="state.cliente.fechaUltimoContacto=this.value">
       </div>
     </div>
   </div>
@@ -482,7 +561,7 @@ function renderCotizacion() {
     <div class="quote-preview-header">
       <div>
         <h2>${esc(state.proyecto)||'Proyecto sin nombre'}</h2>
-        <p>${esc(state.cliente)||'Cliente'} &nbsp;·&nbsp; ${new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'})}</p>
+        <p>${esc(state.cliente.nombre)||'Cliente'} (${state.cliente.tipoCliente}) &nbsp;·&nbsp; ${new Date().toLocaleDateString('es-CO',{day:'numeric',month:'long',year:'numeric'})}</p>
       </div>
       <span class="quote-badge">COTIZACIÓN</span>
     </div>
@@ -520,7 +599,7 @@ function renderHistorial() {
           <div>
             <div class="history-title">${esc(c.proyecto)||'Sin nombre'}</div>
             <div class="history-meta">
-              <i class="ti ti-user" style="font-size:12px"></i> ${esc(c.cliente)||'—'}
+              <i class="ti ti-user" style="font-size:12px"></i> ${esc(typeof c.cliente === 'object' ? c.cliente.nombre : c.cliente)||'—'}
               &nbsp;·&nbsp;
               <i class="ti ti-calendar" style="font-size:12px"></i> ${c.fecha}
               &nbsp;·&nbsp;
@@ -528,8 +607,9 @@ function renderHistorial() {
             </div>
             <div class="history-meta mt-1">
               Materiales: ${fmt(c.tMat)} · MO: ${fmt(c.tMO)} · Gastos: ${fmt(c.tGa)}
-            </div>
-          </div>
+            </div>            <div class=\"history-meta mt-1\">
+              <span style=\"background:var(--amber-l);color:var(--amber-d);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600\">${typeof c.cliente === 'object' ? (c.cliente.estadoCliente||'Prospecto') : 'Prospecto'}</span>
+            </div>          </div>
           <div>
             <div class="history-total">${fmt(c.total)}</div>
             <div class="history-actions">
@@ -589,7 +669,7 @@ function guardarCotizacion() {
   if (!costoBase()) { showToast('Agrega al menos un ítem antes de guardar','error'); return; }
   const cot = {
     proyecto: state.proyecto.trim()||'Sin nombre',
-    cliente:  state.cliente.trim()||'—',
+    cliente:  JSON.parse(JSON.stringify(state.cliente)),
     fecha:    new Date().toLocaleDateString('es-CO'),
     margen:   state.margen,
     incluirIva: state.incluirIva,
@@ -609,7 +689,15 @@ function guardarCotizacion() {
 
 function resetTodo() {
   if (!confirm('¿Limpiar todo y empezar una nueva cotización?')) return;
-  Object.assign(state, { proyecto:'', cliente:'', materiales:[], manoObra:[], gastos:[], margen:30, incluirIva:false });
+  Object.assign(state, { 
+    proyecto:'', 
+    cliente:{ nombre:'', tipoCliente:'Cliente final', documento:'', direccion:'', telefonoPrincipal:'', telefonoSecundario:'', email:'', comoNosConocio:'Google', estadoCliente:'Prospecto', fechaPrimerContacto:'', fechaUltimoContacto:'' },
+    materiales:[], 
+    manoObra:[], 
+    gastos:[], 
+    margen:30, 
+    incluirIva:false 
+  });
   showToast('Lista para nueva cotización');
   render();
 }
@@ -617,7 +705,9 @@ function resetTodo() {
 function copiarResumen() {
   const lines = [
     `COTIZACIÓN — ${state.proyecto||'Proyecto'}`,
-    `Cliente: ${state.cliente||'—'}`,
+    `Cliente: ${state.cliente.nombre||'—'} (${state.cliente.tipoCliente})`,
+    `Teléfono: ${state.cliente.telefonoPrincipal||'—'}`,
+    `Email: ${state.cliente.email||'—'}`,
     `Fecha: ${new Date().toLocaleDateString('es-CO')}`,
     '',
     state.materiales.length ? `Materiales:   ${fmt(totalMat())}` : null,
@@ -650,7 +740,17 @@ function cargarCotizacion(idx) {
   const c = getHistorial()[idx];
   if (!c) return;
   state.proyecto  = c.proyecto;
-  state.cliente   = c.cliente;
+  if (typeof c.cliente === 'object') {
+    state.cliente = JSON.parse(JSON.stringify(c.cliente));
+    if (!state.cliente.comoNosConocio) state.cliente.comoNosConocio = 'Google';
+    if (!state.cliente.estadoCliente) state.cliente.estadoCliente = 'Prospecto';
+    if (!state.cliente.fechaPrimerContacto) state.cliente.fechaPrimerContacto = '';
+    if (!state.cliente.fechaUltimoContacto) state.cliente.fechaUltimoContacto = '';
+    if (!state.cliente.direccion) state.cliente.direccion = '';
+  } else {
+    state.cliente = { nombre: c.cliente, tipoCliente: 'Cliente final', documento: '', telefonoPrincipal: '', telefonoSecundario: '', email: '', comoNosConocio: 'Google', estadoCliente: 'Prospecto', fechaPrimerContacto: '', fechaUltimoContacto: '' };
+    state.cliente.direccion = '';
+  }
   state.margen    = c.margen;
   state.incluirIva = c.incluirIva;
   state.iva       = c.iva;
@@ -678,7 +778,7 @@ function exportarPDF() {
   if (!costoBase()) { showToast('Agrega ítems antes de exportar','error'); return; }
   const c = {
     proyecto:   state.proyecto||'Proyecto',
-    cliente:    state.cliente||'Cliente',
+    cliente:    state.cliente,
     fecha:      new Date().toLocaleDateString('es-CO'),
     margen:     state.margen,
     incluirIva: state.incluirIva,
@@ -714,14 +814,17 @@ function generarPDF(c) {
   // ── Caja datos del proyecto ──
   y = 50;
   doc.setFillColor(243, 237, 228);
-  doc.roundedRect(ML, y, W, 22, 3, 3, 'F');
+  doc.roundedRect(ML, y, W, 30, 3, 3, 'F');
   doc.setTextColor(122, 77, 10);
   doc.setFontSize(11); doc.setFont('helvetica','bold');
   doc.text(c.proyecto, ML+6, y+8);
   doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(107, 94, 78);
-  doc.text(`Cliente: ${c.cliente}`, ML+6, y+15);
-  doc.text(`Margen: ${c.margen}%${c.incluirIva ? ` · IVA: ${c.iva}%` : ''}`, PW-MR, y+15, {align:'right'});
-  y += 32;
+  const clienteName = typeof c.cliente === 'object' ? c.cliente.nombre : c.cliente;
+  const clienteType = typeof c.cliente === 'object' ? c.cliente.tipoCliente : '';
+  const clienteTel = typeof c.cliente === 'object' ? c.cliente.telefonoPrincipal : '';
+  doc.text(`Cliente: ${clienteName} (${clienteType})`, ML+6, y+15);
+  doc.text(`Teléfono: ${clienteTel || '—'}  |  Margen: ${c.margen}%${c.incluirIva ? ` · IVA: ${c.iva}%` : ''}`, ML+6, y+22);
+  y += 40;
 
   // ── Tabla Materiales ──
   if (c.materiales && c.materiales.length > 0) {
@@ -832,5 +935,14 @@ function esc(str) {
 // ─── INIT ────────────────────────────────────────────────────────────────────
 render();
 </script>
+
+<script src="../config/routes.js"></script>
+<script src="../components/navbar.js"></script>
+<script src="../shared/calculos.js"></script>
+<script>renderSidebar('cotizaciones');</script>
+
+
+</main>
+</div>
 </body>
 </html>

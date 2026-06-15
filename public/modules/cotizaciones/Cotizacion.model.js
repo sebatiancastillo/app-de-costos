@@ -81,14 +81,17 @@ class CotizacionModel {
 
   static validar(cotizacion) {
     const errores = [];
+    const nomProy = typeof cotizacion.proyecto === 'object' ? cotizacion.proyecto?.nombre : cotizacion.proyecto;
+    const nomCli = typeof cotizacion.cliente === 'object' ? cotizacion.cliente?.nombre : cotizacion.cliente;
     
-    if (!cotizacion.proyecto?.trim()) {
+    if (!nomProy?.trim()) {
       errores.push('El nombre del proyecto es obligatorio');
     }
-    if (!cotizacion.cliente?.trim()) {
+    if (!nomCli?.trim()) {
       errores.push('El nombre del cliente es obligatorio');
     }
-    if (cotizacion.costos?.total <= 0) {
+    const total = cotizacion.costos?.total || cotizacion.costos?.precioFinal || 0;
+    if (total <= 0) {
       errores.push('El total debe ser mayor a 0');
     }
     
@@ -129,6 +132,147 @@ class CotizacionModel {
 
   static getEstadoConfig(estado) {
     return ESTADOS[estado?.toUpperCase()] || ESTADOS.PENDIENTE;
+  }
+
+  static crearDesdeFormulario(datos) {
+    const now = new Date();
+    const sumCostos = (datos.costoMateriales || 0) + (datos.costoManoObra || 0)
+      + (datos.costoHerrajes || 0) + (datos.costoHerramientas || 0) + (datos.costoTransporte || 0)
+      + (datos.costoSubcontratos || 0);
+    const margen = datos.margenGanancia != null ? datos.margenGanancia : 40;
+    const precioFinal = sumCostos * (1 + margen / 100);
+
+    return {
+      id: datos.id || Date.now(),
+      numero: datos.numero || '',
+      estado: datos.estado || 'borrador',
+      fechaCreacion: datos.fechaCreacion || now.toISOString(),
+      fechaActualizacion: now.toISOString(),
+      fechaEnvio: datos.fechaEnvio || null,
+      fechaAprobacion: datos.fechaAprobacion || null,
+      fechaProduccion: datos.fechaProduccion || null,
+      fechaFinalizacion: datos.fechaFinalizacion || null,
+      fechaArchivado: datos.fechaArchivado || null,
+
+      cliente: {
+        tipo: datos.tipoCliente || 'cliente_final',
+        nombre: datos.nombreCliente || '',
+        contacto: datos.contactoPrincipal || '',
+        telefono: datos.telefono || '',
+        whatsapp: datos.whatsapp || '',
+        email: datos.email || '',
+        direccion: datos.direccionEntrega || datos.direccionProyecto || '',
+        ciudad: datos.ciudad || '',
+        barrio: datos.barrio || '',
+        comoNosConocio: datos.comoNosConocio || ''
+      },
+
+      proyecto: {
+        tipo: datos.tipoTrabajo || '',
+        tipoOtro: datos.tipoTrabajoOtro || '',
+        nombre: datos.nombreProyecto || '',
+        descripcion: datos.descripcionProyecto || '',
+        dimensionesGenerales: {
+          alto: datos.altoGeneral || 0,
+          ancho: datos.anchoGeneral || 0,
+          profundo: datos.profundoGeneral || 0
+        },
+        observaciones: datos.observaciones || '',
+        validez: datos.validezCotizacion || '15',
+        ubicacion: datos.ubicacionInstalacion || 'interior',
+        fechaEntregaDeseada: datos.fechaEntregaDeseada || ''
+      },
+
+      especificaciones: {
+        materialPrincipal: datos.materialPrincipal || '',
+        especieMadera: datos.especieMadera || '',
+        acabados: datos.acabados || [],
+        colorTono: datos.colorTono || '',
+        medidas: {
+          largo: datos.largo || 0,
+          ancho: datos.ancho || 0,
+          alto: datos.alto || 0,
+          grosor: datos.grosor || 0
+        },
+        cortesEspeciales: datos.cortesEspeciales || [],
+        cantidadPiezas: datos.cantidadPiezas || 1,
+        nivelDificultad: datos.nivelDificultad || 'basico',
+        requiereInstalacion: datos.requiereInstalacion || false,
+        distanciaKm: datos.distanciaKm || 0
+      },
+
+      costos: {
+        materiales: datos.costoMateriales || 0,
+        manoObra: datos.costoManoObra || 0,
+        herrajes: datos.costoHerrajes || 0,
+        herramientas: datos.costoHerramientas || 0,
+        transporte: datos.costoTransporte || 0,
+        subcontratos: datos.costoSubcontratos || 0,
+        tiempoEstimadoDias: datos.tiempoEstimadoDias || 0,
+        margenGanancia: margen,
+        precioFinal: precioFinal
+      },
+
+      crm: {
+        probabilidadCierre: datos.probabilidadCierre != null ? datos.probabilidadCierre : 50,
+        notas: datos.notasAsesor || [],
+        fechaUltimoContacto: datos.fechaUltimoContacto || null,
+        fechaProximoSeguimiento: datos.fechaProximoSeguimiento || null,
+        metodoComunicacion: datos.metodoComunicacion || 'whatsapp'
+      },
+
+      pagos: {
+        montoTotal: datos.montoTotal || precioFinal,
+        tipoAnticipo: datos.tipoAnticipo || '50',
+        montoAnticipo: datos.montoAnticipo || 0,
+        metodoPago: datos.metodoPago || 'transferencia',
+        estadoPago: datos.estadoPago || 'pendiente',
+        notas: datos.notasPago || ''
+      },
+
+      adjuntos: datos.adjuntos || [],
+      recordatorios: datos.recordatorios || [],
+      notas: datos.notas || '',
+      versi: 1
+    };
+  }
+
+  static calcularPrecioFinal(costosObj, margen) {
+    if (!costosObj) return 0;
+    const suma = (costosObj.materiales || 0) + (costosObj.manoObra || 0)
+      + (costosObj.herramientas || 0) + (costosObj.transporte || 0)
+      + (costosObj.subcontratos || 0);
+    const m = margen != null ? margen : 40;
+    return suma * (1 + m / 100);
+  }
+
+  static migrarPlanaANidada(c) {
+    if (c.cliente && typeof c.cliente === 'object' && c.cliente.nombre !== undefined) {
+      return c;
+    }
+    return this.crearDesdeFormulario({
+      id: c.id,
+      estado: c.estado,
+      fechaCreacion: c.fechaCreacion,
+      fechaEnvio: c.fechaEnvio,
+      fechaAprobacion: c.fechaAprobacion,
+      fechaProduccion: c.fechaProduccion,
+      fechaFinalizacion: c.fechaFinalizacion,
+      fechaArchivado: c.fechaArchivado,
+      nombreCliente: c.cliente || '',
+      telefono: c.telefono || '',
+      direccionProyecto: c.direccion || '',
+      nombreProyecto: c.proyecto || '',
+      descripcionProyecto: c.descripcion || '',
+      ancho: c.ancho || 0,
+      alto: c.alto || 0,
+      costoMateriales: c.costos?.materiales || 0,
+      costoManoObra: c.costos?.manoObra || 0,
+      margenGanancia: c.margen || 40,
+      tiempoEstimadoDias: c.tiempoEntrega || 0,
+      recordatorios: c.recordatorios || [],
+      notas: c.notas || ''
+    });
   }
 }
 

@@ -1,12 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>vikingos — Dashboard</title>
-  <link rel="stylesheet" href="styles/base.css"/>
-  <link rel="stylesheet" href="styles/layout.css"/>
-  <link rel="stylesheet" href="styles/components.css"/>  
+  <link rel="stylesheet" href="styles/estilos.css"/>
+  <link rel="stylesheet" href="styles/cotizacion.css"/>  
 </head>
 <body>
 <div class="app-layout">
@@ -138,10 +137,39 @@
 
 <!-- Scripts -->
 <script src="config/routes.js"></script>
-<script src="shared/navbar.js"></script>
-<script src="modules/cotizaciones/Cotizacion.view.js"></script>
+<script src="components/navbar.js"></script>
+<script src="shared/calculos.js"></script>
+<script src="modules/cotizaciones/Cotizacion.model.js"></script>
+<script src="modules/cotizaciones/Cotizacion.controller.js"></script>
 <script>
   renderSidebar('dashboard');
+  (function() {
+    const ctrl = window.CotizacionController;
+    if (ctrl) {
+      const stats = ctrl.obtenerEstadisticas();
+      const todas = ctrl.obtenerTodos();
+      document.getElementById('statProyectos').textContent = stats.total || 0;
+      document.getElementById('statValor').textContent = formatCOP(stats.totalMonto || 0);
+      document.getElementById('statMargen').textContent = (stats.promedioMargen || 0) + '%';
+      if (todas.length > 0) {
+        const ult = todas[0];
+        const nomProy = typeof ult.proyecto === 'object' ? ult.proyecto?.nombre : ult.proyecto;
+        document.getElementById('statUltimoNombre').textContent = nomProy || '\u2014';
+        document.getElementById('statUltimaFecha').textContent = formatFecha(ult.fechaCreacion);
+      }
+      const tbody = document.getElementById('tablaRecientes');
+      if (todas.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:30px;">Sin cotizaciones</td></tr>';
+      } else {
+        tbody.innerHTML = todas.slice(0, 5).map(function(c) {
+          var nomProy = typeof c.proyecto === 'object' ? c.proyecto?.nombre || '' : c.proyecto || '';
+          var nomCli = typeof c.cliente === 'object' ? c.cliente?.nombre || '' : c.cliente || '';
+          return '<tr><td>' + nomProy + '</td><td>' + nomCli + '</td><td>' + (c.categoria || c.proyecto?.tipo || '\u2014') + '</td><td>' + formatCOP(c.costos?.total || c.costos?.precioFinal || 0) + '</td><td>' + formatFecha(c.fechaCreacion) + '</td><td><a href="views/cotizar.html?id=' + c.id + '" style="color:var(--amber);text-decoration:none;">\u270f\ufe0f</a></td></tr>';
+        }).join('');
+      }
+      document.getElementById('dashSubtitulo').textContent = todas.length + ' cotizacione' + (todas.length === 1 ? '' : 's');
+    }
+  })();
   
 </script>
 </body>

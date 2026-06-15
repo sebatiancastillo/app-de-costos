@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
@@ -616,6 +616,9 @@
   </style>
 </head>
 <body>
+<div class="app-layout">
+<aside class="sidebar" id="sidebar"></aside>
+<main class="main-area">
 <div class="container">
   <div class="header">
     <h1>📋 Cotizaciones</h1>
@@ -630,27 +633,19 @@
 </div>
 
 <!-- Scripts -->
-<script src="../modules/cotizaciones/Quotation.model.js"></script>
 <script src="../shared/storage.js"></script>
-<script src="../modules/cotizaciones/Quotation.controller.js"></script>
 <script src="../shared/utils.js"></script>
-<script src="../modules/cotizaciones/Quotation.view.js"></script>
-<script src="../shared/pdf-service.js"></script>
-<!-- CDN html2pdf para generar PDFs -->
+<script src="../shared/pdf.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script>
-  // ── Inicialización del módulo ──
   class QuotationApp {
     constructor() {
-      this.model = new QuotationModel();
       this.storage = new QuotationStorage();
-      this.controller = new QuotationController(this.model, this.storage);
-      this.view = new QuotationView(this.controller, QuotationUtils);
-      
+      this.quotations = [];
+      this.currentId = 1;
       this.currentView = 'list';
       this.currentQuotationId = null;
-      
       this.init();
     }
 
@@ -661,20 +656,53 @@
     }
 
     loadFromStorage() {
-      const quotations = this.storage.getAllQuotations();
-      this.model.quotations = quotations;
-      if (quotations.length > 0) {
-        this.model.currentId = Math.max(...quotations.map(q => q.id)) + 1;
+      this.quotations = this.storage.getAllQuotations();
+      if (this.quotations.length > 0) {
+        this.currentId = Math.max(...this.quotations.map(q => q.id)) + 1;
       }
+    }
+
+    getQuotation(id) {
+      return this.quotations.find(q => q.id === id);
+    }
+
+    getAllQuotations() {
+      return this.quotations;
+    }
+
+    saveQuotation(id, data) {
+      let quotation;
+      if (id) {
+        const idx = this.quotations.findIndex(q => q.id === id);
+        if (idx === -1) return null;
+        this.quotations[idx] = { ...this.quotations[idx], ...data, updatedDate: new Date().toISOString() };
+        quotation = this.quotations[idx];
+      } else {
+        quotation = { id: this.currentId++, ...data, createdDate: new Date().toISOString(), updatedDate: new Date().toISOString(), items: [], financials: { subtotal: 0, overheadPercentage: 15, overheadAmount: 0, marginPercentage: 30, marginAmount: 0, total: 0 } };
+        this.quotations.unshift(quotation);
+      }
+      this.storage.saveQuotation(quotation);
+      return quotation;
+    }
+
+    deleteQuotation(id) {
+      this.quotations = this.quotations.filter(q => q.id !== id);
+      this.storage.deleteQuotation(id);
+    }
+
+    searchAndFilter(searchTerm, status) {
+      let result = this.quotations;
+      if (searchTerm) result = QuotationUtils.searchQuotations(result, searchTerm);
+      if (status) result = result.filter(q => q.status === status);
+      return result;
     }
 
     renderList() {
       const container = document.getElementById('contentArea');
-      
-      let html = `
+      container.innerHTML = `
         <div class="filters">
-          <input type="text" id="searchInput" placeholder="🔍 Buscar por cliente o proyecto..."/>
-          <select id="statusFilter">
+          <input type="text" id="searchInput" placeholder="🔍 Buscar por cliente o proyecto..." oninput="quotationApp.applyFilters()"/>
+          <select id="statusFilter" onchange="quotationApp.applyFilters()">
             <option value="">Todos los estados</option>
             <option value="pending">Pendiente</option>
             <option value="sent">Enviada</option>
@@ -684,131 +712,135 @@
             <option value="archived">Archivada</option>
           </select>
         </div>
-        <div id="quotationsList" class="quotations-grid"></div>
-      `;
-      
-      container.innerHTML = html;
-      
-      const quotations = this.model.getAllQuotations();
-      this.view.renderQuotationsList(document.getElementById('quotationsList'), quotations);
-      
-      this.attachFilterHandlers();
+        <div id="quotationsList" class="quotations-grid"></div>`;
+      this.renderQuotationsList(document.getElementById('quotationsList'), this.quotations);
+    }
+
+    renderQuotationsList(container, quotations) {
+      if (quotations.length === 0) {
+        container.innerHTML = '<div class="empty"><br/><br/><p style="text-align:center;color:#999;">Sin cotizaciones. Crea una nueva.</p></div>';
+        return;
+      }
+      container.innerHTML = quotations.map(q => {
+        const statusLabels = { pending: 'Pendiente', sent: 'Enviada', approved: 'Aprobada', production: 'Producción', completed: 'Finalizada', archived: 'Archivada' };
+        return `<div class="quotation-card" data-id="${q.id}">
+          <div class="card-header">
+            <div class="card-left">
+              <h3 class="estimate-number">${q.estimateNumber || '#'+q.id}</h3>
+              <p class="client-name">${q.client?.name || '—'}</p>
+            </div>
+            <div class="card-right">
+              <span class="status-badge status-${q.status}">${statusLabels[q.status] || q.status}</span>
+              <p class="total-amount">$${QuotationUtils.formatCurrency(q.financials?.total || 0)}</p>
+            </div>
+          </div>
+          <div class="card-body">
+            <p class="project-name">${q.project?.name || '—'}</p>
+            <p class="date-created">${QuotationUtils.formatDateShort(q.createdDate)}</p>
+          </div>
+          <div class="card-footer">
+            <button class="btn-sm btn-edit" onclick="quotationApp.renderForm(${q.id})">✏️ Editar</button>
+            <button class="btn-sm btn-view" onclick="quotationApp.renderPreview(${q.id})">👁️ Ver</button>
+            <button class="btn-sm btn-delete" onclick="if(confirm('¿Eliminar?'))quotationApp.deleteQuotation(${q.id});quotationApp.renderList();">🗑️</button>
+          </div>
+        </div>`;
+      }).join('');
     }
 
     renderForm(quotationId = null) {
       const container = document.getElementById('contentArea');
-      const quotation = quotationId ? this.controller.getQuotation(quotationId) : null;
-      
-      this.view.renderQuotationForm(container, quotation);
+      const q = quotationId ? this.getQuotation(quotationId) : null;
+      const c = q ? q.client || {} : {};
+      const p = q ? q.project || {} : {};
       this.currentQuotationId = quotationId;
+
+      container.innerHTML = `
+        <div class="quotation-form">
+          <h2>${quotationId ? 'Editar' : 'Nueva'} Cotización</h2>
+          <div class="form-section"><h3>Cliente</h3>
+            <input id="fName" placeholder="Nombre" value="${c.name || ''}"/>
+            <input id="fEmail" placeholder="Email" value="${c.email || ''}"/>
+            <input id="fPhone" placeholder="Teléfono" value="${c.phone || ''}"/>
+            <input id="fAddress" placeholder="Dirección" value="${c.address || ''}"/>
+            <input id="fCity" placeholder="Ciudad" value="${c.city || ''}"/>
+            <input id="fCompany" placeholder="Empresa" value="${c.company || ''}"/>
+          </div>
+          <div class="form-section"><h3>Proyecto</h3>
+            <input id="fProjName" placeholder="Nombre del proyecto" value="${p.name || ''}"/>
+            <select id="fCategory"><option value="closet" ${p.category==='closet'?'selected':''}>Closet</option><option value="mesa" ${p.category==='mesa'?'selected':''}>Mesa</option><option value="cocina" ${p.category==='cocina'?'selected':''}>Cocina</option><option value="otro" ${p.category==='otro'?'selected':''}>Otro</option></select>
+            <textarea id="fDescription" placeholder="Descripción">${p.description || ''}</textarea>
+            <input id="fDelivery" type="number" placeholder="Días entrega" value="${p.deliveryDays || 15}"/>
+          </div>
+          <button class="btn-primary" onclick="quotationApp.saveForm()">💾 Guardar</button>
+          <button class="btn-secondary" onclick="quotationApp.renderList()">← Volver</button>
+        </div>`;
+    }
+
+    saveForm() {
+      const id = this.currentQuotationId;
+      const data = {
+        client: { name: document.getElementById('fName').value, email: document.getElementById('fEmail').value, phone: document.getElementById('fPhone').value, address: document.getElementById('fAddress').value, city: document.getElementById('fCity').value, company: document.getElementById('fCompany').value },
+        project: { name: document.getElementById('fProjName').value, category: document.getElementById('fCategory').value, description: document.getElementById('fDescription').value, deliveryDays: parseInt(document.getElementById('fDelivery').value) || 15 },
+        status: id ? this.getQuotation(id)?.status || 'pending' : 'pending'
+      };
+      this.saveQuotation(id, data);
+      this.renderList();
     }
 
     renderPreview(quotationId) {
       const container = document.getElementById('contentArea');
-      const quotation = this.controller.getQuotation(quotationId);
-      
-      let html = `
-        <div style="margin-bottom: 20px;">
-          <button class="btn-secondary" onclick="window.quotationApp.renderList()">← Volver</button>
-          <button class="btn-primary" id="printBtn" style="margin-left: 10px;">🖨️ Imprimir</button>
-          <button class="btn-primary" id="downloadBtn" style="margin-left: 10px;">📥 Descargar PDF</button>
-          <button class="btn-primary" id="shareBtn" style="margin-left: 10px;">📤 Compartir</button>
+      const q = this.getQuotation(quotationId);
+      if (!q) return;
+      const f = q.financials || {};
+      container.innerHTML = `
+        <div style="margin-bottom:20px;">
+          <button class="btn-secondary" onclick="quotationApp.renderList()">← Volver</button>
+          <button class="btn-primary" id="downloadBtn" style="margin-left:10px;">📥 PDF</button>
+          <button class="btn-primary" id="shareBtn" style="margin-left:10px;">📤 Compartir</button>
         </div>
-        <div id="previewContainer"></div>
-      `;
-      
-      container.innerHTML = html;
-      this.view.renderQuotationPreview(document.getElementById('previewContainer'), quotation);
-      
-      // Evento Imprimir
-      document.getElementById('printBtn').addEventListener('click', () => {
-        window.print();
-      });
+        <div class="quotation-preview">
+          <h2>${q.estimateNumber || '#'+q.id}</h2>
+          <p><strong>${q.client?.name || '—'}</strong></p>
+          <p>${q.project?.name || '—'}</p>
+          <hr/>
+          <p>Total: <strong>$${QuotationUtils.formatCurrency(f.total || 0)}</strong></p>
+          <p>Estado: ${q.status}</p>
+        </div>`;
 
-      // Evento Descargar PDF
-      document.getElementById('downloadBtn').addEventListener('click', () => {
-        const pdfGenerator = new QuotationPDFGenerator();
-        pdfGenerator.generatePDF(quotation);
-        this.view.showNotification('PDF descargado correctamente', 'success');
-      });
-
-      // Evento Compartir
-      document.getElementById('shareBtn').addEventListener('click', () => {
-        const shareText = `Cotización ${quotation.estimateNumber} - ${quotation.project.name} - Total: $${quotation.financials.total.toLocaleString('es-CO')}`;
-        
-        if (navigator.share) {
-          navigator.share({
-            title: 'Cotización Vikingos',
-            text: shareText,
-            url: window.location.href
-          }).catch(err => console.log('Error compartiendo:', err));
-        } else {
-          QuotationUtils.copyToClipboard(shareText);
-          this.view.showNotification('Información copiada al portapapeles', 'success');
-        }
-      });
+      document.getElementById('downloadBtn').onclick = () => { new QuotationPDFGenerator().generatePDF(q); };
+      document.getElementById('shareBtn').onclick = () => {
+        const text = 'Cotización ' + (q.estimateNumber || '#'+q.id) + ' - Total: $' + QuotationUtils.formatCurrency(f.total || 0);
+        if (navigator.share) navigator.share({ title: 'Cotización Vikingos', text, url: location.href }).catch(()=>{});
+        else { QuotationUtils.copyToClipboard(text); }
+      };
     }
 
     attachGlobalEventHandlers() {
-      document.getElementById('newQuotationBtn').addEventListener('click', () => {
-        this.renderForm();
-      });
-
-      document.getElementById('exportBtn').addEventListener('click', () => {
+      document.getElementById('newQuotationBtn').onclick = () => this.renderForm();
+      document.getElementById('exportBtn').onclick = () => {
         const json = this.storage.exportAsJSON();
         QuotationUtils.downloadFile('cotizaciones.json', json, 'application/json');
-        this.view.showNotification('Cotizaciones exportadas', 'success');
-      });
-
-      document.getElementById('backupBtn').addEventListener('click', () => {
+      };
+      document.getElementById('backupBtn').onclick = () => {
         const backup = this.storage.createBackup();
-        QuotationUtils.downloadFile(`backup-${new Date().toISOString().split('T')[0]}.json`, backup, 'application/json');
-        this.view.showNotification('Backup creado', 'success');
-      });
-
-      window.addEventListener('openQuotationEditor', (e) => {
-        this.renderForm(e.detail.id);
-      });
-
-      window.addEventListener('viewQuotation', (e) => {
-        this.renderPreview(e.detail.id);
-      });
-
-      window.addEventListener('refreshQuotationsList', () => {
-        this.renderList();
-      });
-    }
-
-    attachFilterHandlers() {
-      const searchInput = document.getElementById('searchInput');
-      const statusFilter = document.getElementById('statusFilter');
-
-      [searchInput, statusFilter].forEach(el => {
-        el.addEventListener('change', () => this.applyFilters());
-        el.addEventListener('input', () => this.applyFilters());
-      });
+        QuotationUtils.downloadFile('backup-' + new Date().toISOString().split('T')[0] + '.json', backup, 'application/json');
+      };
     }
 
     applyFilters() {
-      const searchTerm = document.getElementById('searchInput').value;
+      const search = document.getElementById('searchInput').value;
       const status = document.getElementById('statusFilter').value;
-
-      let quotations = this.model.getAllQuotations();
-
-      if (searchTerm) {
-        quotations = QuotationUtils.searchQuotations(quotations, searchTerm);
-      }
-
-      if (status) {
-        quotations = quotations.filter(q => q.status === status);
-      }
-
-      this.view.renderQuotationsList(document.getElementById('quotationsList'), quotations);
+      const filtered = this.searchAndFilter(search, status);
+      this.renderQuotationsList(document.getElementById('quotationsList'), filtered);
     }
   }
 
-  // Iniciar app
   window.quotationApp = new QuotationApp();
 </script>
+<script src="../config/routes.js"></script>
+<script src="../components/navbar.js"></script>
+<script>renderSidebar('cotizaciones');</script>
+</main>
+</div>
 </body>
 </html>

@@ -10,8 +10,9 @@ const ROUTES = {
     id: 'dashboard',
     label: 'Dashboard',
     icon: '⬛',
-    root: 'index.html',
-    nested: '../../index.html'
+    root: 'index.html',// ── ruta del dasboar
+    
+    nested: 'dashboard.html'
   },
 
   
@@ -29,7 +30,7 @@ const ROUTES = {
     label: 'Cotizaciones',
     icon: '📋',
     root: 'views/Cotizacion_List.html',
-    nested: '../../views/Cotizacion_List.html'
+    nested: 'Cotizacion_List.html'
   },
   
   COTIZACION_EN_PROCESO: {

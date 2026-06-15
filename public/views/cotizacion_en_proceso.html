@@ -1,91 +1,360 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Vikingos — Cotizaciones en Proceso</title>
-  <link rel="stylesheet" href="../styles/base.css"/>
-  <link rel="stylesheet" href="../styles/layout.css"/>
-  <link rel="stylesheet" href="../styles/components.css"/>
-</head>
+  <title>Vikingos — Seguimiento CRM</title>
+  
 <body>
-<div class="app-layout">
-  <aside class="sidebar" id="sidebar"></aside>
-
-  <main class="main-area">
-    <div class="topbar">
-      <div>
-        <div class="page-title">Cotizaciones en Proceso</div>
-        <div class="page-sub" id="subtitulo">Proyectos sin completar</div>
-      </div>
-      <div class="topbar-actions">
-        <a href="cotizar.html" class="btn btn-primary">+ Nueva Cotización</a>
-      </div>
-    </div>
-
-    <div class="content">
-      <div id="procesoContainer">
-        <div class="empty-state">
-          <div class="empty-icon">📝</div>
-          <div class="empty-title">Sin cotizaciones en proceso</div>
-          <div class="empty-sub">Las cotizaciones sin guardar aparecerán aquí</div>
-          <br/><a href="cotizar.html" class="btn btn-primary" style="margin-top:16px;">Crear Cotización</a>
+  <div class="app-layout">
+    <aside class="sidebar" id="sidebar"></aside>
+    
+    <main class="main-area">
+      <div class="topbar">
+        <div>
+          <div class="page-title" id="pageTitle">Seguimiento CRM</div>
+          <div class="page-sub" id="pageSub">Cargando cotización...</div>
         </div>
+      <div class="topbar-actions" style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="volver()"><i class="ti ti-arrow-left"></i> Volver</button>
+        <button class="btn btn-primary btn-sm" onclick="guardarCambios()"><i class="ti ti-device-floppy"></i> Guardar cambios</button>
       </div>
     </div>
+    
+    <div class="content" id="contenido"></div>
   </main>
 </div>
 
 <div class="toast" id="toast"></div>
+
+<link rel="stylesheet" href="../styles/cotizacion.css"/>
+<link rel="stylesheet" href="../styles/estilos.css"/>
 <script src="../config/routes.js"></script>
-
-  <script src="../shared/navbar.js"></script>
+<script src="../components/navbar.js"></script>
+<script src="../shared/calculos.js"></script>
+<script src="../modules/cotizaciones/Cotizacion.model.js"></script>
+<script src="../modules/cotizaciones/Cotizacion.controller.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
 <script>
-  renderSidebar('cotizacion_en_proceso');
+renderSidebar('cotizacion_en_proceso');
 
-  function mostrarToast(msg){
-    const t=document.getElementById('toast');
-    t.textContent=msg;t.classList.add('show');
-    setTimeout(()=>t.classList.remove('show'),2800);
+
+var COTIZACION = null;
+
+function mostrarToast(msg, tipo) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (tipo === 'error' ? ' error' : '');
+  if (window._toastTimer) clearTimeout(window._toastTimer);
+  window._toastTimer = setTimeout(function() { t.className = 'toast'; }, 3000);
+}
+
+function volver() {
+  window.location.href = getRoute('COTIZACIONES');
+}
+
+function renderEstadoBadge(estado) {
+  var cfg = CotizacionModel.getEstadoConfig(estado);
+  return '<span class="estado-badge" style="background:' + cfg.color + '22;color:' + cfg.color + ';border:1px solid ' + cfg.color + '44;">' + cfg.icon + ' ' + cfg.label + '</span>';
+}
+
+function render() {
+  if (!COTIZACION) return;
+  var c = COTIZACION;
+  var p = c.proyecto || {};
+  var cl = c.cliente || {};
+  var esp = c.especificaciones || {};
+  var med = esp.medidas || {};
+  var costos = c.costos || {};
+  var crmData = c.crm || {};
+  var pagos = c.pagos || {};
+  var estadoActual = c.estado || 'pendiente';
+  var cfg = CotizacionModel.getEstadoConfig(estadoActual);
+
+  document.getElementById('pageTitle').textContent = 'Seguimiento CRM — ' + (c.numero || 'COT-#' + c.id);
+  document.getElementById('pageSub').innerHTML = renderEstadoBadge(estadoActual) + ' &nbsp;·&nbsp; ' + (p.nombre || 'Sin nombre');
+
+  var transiciones = FLUJO_ESTADOS[estadoActual] || [];
+  var botonesEstado = transiciones.map(function(nxt) {
+    var ncfg = CotizacionModel.getEstadoConfig(nxt);
+    var cls = 'estado-btn';
+    if (nxt === 'aprobada' || nxt === 'produccion') cls += ' primary';
+    if (nxt === 'rechazada') cls += ' danger';
+    return '<button class="' + cls + '" onclick="cambiarEstado(\'' + nxt + '\')">' + ncfg.icon + ' ' + ncfg.label + '</button>';
+  }).join('');
+
+  var showProb = estadoActual === 'enviada' || estadoActual === 'pendiente';
+  var probVal = crmData.probabilidadCierre != null ? crmData.probabilidadCierre : 50;
+
+  var notasHtml = (crmData.notas || []).map(function(n) {
+    return '<div class="nota-item"><div>' + esc(n.texto || n) + '</div><div class="nota-fecha">' + formatFecha(n.fecha || n.fechaCreacion || new Date()) + '</div></div>';
+  }).join('');
+
+  var html =
+    '<div class="crm-grid">' +
+      '<!-- ZONA IZQUIERDA: Info del proyecto -->' +
+      '<div class="crm-left">' +
+        '<div class="section" id="infoSection">' +
+          '<div class="section-title section-toggle" onclick="toggleInfo()">' +
+            '<i class="ti ti-info-circle" style="color:var(--amber)"></i> Información del proyecto' +
+          '</div>' +
+          '<div class="section-body">' +
+            '<div class="info-line"><span class="info-label">Cotización</span><span class="info-value mono">' + esc(c.numero || '—') + '</span></div>' +
+            '<div class="info-line"><span class="info-label">Estado</span><span class="info-value">' + renderEstadoBadge(estadoActual) + '</span></div>' +
+            '<div class="info-line"><span class="info-label">Cliente</span><span class="info-value">' + esc(cl.nombre || '—') + '</span></div>' +
+            (cl.contacto ? '<div class="info-line"><span class="info-label">Contacto</span><span class="info-value">' + esc(cl.contacto) + '</span></div>' : '') +
+            (cl.telefono ? '<div class="info-line"><span class="info-label">Teléfono</span><span class="info-value">' + esc(cl.telefono) + '</span></div>' : '') +
+            (cl.email ? '<div class="info-line"><span class="info-label">Email</span><span class="info-value">' + esc(cl.email) + '</span></div>' : '') +
+            '<div class="info-line"><span class="info-label">Proyecto</span><span class="info-value">' + esc(p.nombre || '—') + '</span></div>' +
+            (p.tipo ? '<div class="info-line"><span class="info-label">Tipo</span><span class="info-value">' + esc(p.tipo) + '</span></div>' : '') +
+            (p.descripcion ? '<div class="info-line" style="flex-direction:column;align-items:flex-start;gap:4px;"><span class="info-label">Descripción</span><span class="info-value" style="text-align:left;font-weight:400;">' + esc(p.descripcion) + '</span></div>' : '') +
+            (med.largo || med.ancho || med.alto ? '<div class="info-line"><span class="info-label">Medidas</span><span class="info-value">' +
+              (med.largo ? med.largo + '×' : '') + (med.ancho ? med.ancho : '') + (med.alto ? '×' + med.alto : '') + (med.grosor ? ' (' + med.grosor + 'mm)' : '') + ' cm</span></div>' : '') +
+            (esp.materialPrincipal ? '<div class="info-line"><span class="info-label">Material</span><span class="info-value">' + esc(esp.materialPrincipal) + (esp.especieMadera ? ' (' + esc(esp.especieMadera) + ')' : '') + '</span></div>' : '') +
+            (c.fechaCreacion ? '<div class="info-line"><span class="info-label">Creado</span><span class="info-value">' + formatFecha(c.fechaCreacion) + '</span></div>' : '') +
+            '<div class="info-line"><span class="info-label">Costo total</span><span class="info-value amber mono">' + formatCOP(costos.precioFinal || costos.total || 0) + '</span></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<!-- ZONA CENTRO: Seguimiento CRM -->' +
+      '<div class="crm-center">' +
+        '<div class="section">' +
+          '<div class="section-title"><i class="ti ti-arrows-shuffle" style="color:var(--amber)"></i> Flujo de estado</div>' +
+          '<div class="flex flex-wrap gap-8">' + (botonesEstado || '<span style="font-size:13px;color:var(--muted);">No hay transiciones disponibles</span>') + '</div>' +
+        '</div>' +
+
+        '<div class="section">' +
+          '<div class="section-title"><i class="ti ti-trending-up" style="color:var(--amber)"></i> Seguimiento</div>' +
+          '<div class="field' + (showProb ? '' : ' hidden') + '">' +
+            '<label>Probabilidad de cierre</label>' +
+            '<div class="prob-wrap">' +
+              '<input type="range" id="probCierre" min="0" max="100" value="' + probVal + '" oninput="actProb(this.value)">' +
+              '<span class="prob-val" id="probDisplay">' + probVal + '%</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Método de comunicación</label>' +
+            '<select id="metodoComunicacion">' +
+              '<option value="whatsapp"' + (crmData.metodoComunicacion === 'whatsapp' ? ' selected' : '') + '>WhatsApp</option>' +
+              '<option value="llamada"' + (crmData.metodoComunicacion === 'llamada' ? ' selected' : '') + '>Llamada</option>' +
+              '<option value="email"' + (crmData.metodoComunicacion === 'email' ? ' selected' : '') + '>Email</option>' +
+              '<option value="presencial"' + (crmData.metodoComunicacion === 'presencial' ? ' selected' : '') + '>Presencial</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="g2" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">' +
+            '<div class="field">' +
+              '<label>Último contacto</label>' +
+              '<input type="date" id="fechaUltimoContacto" value="' + (crmData.fechaUltimoContacto ? crmData.fechaUltimoContacto.substring(0, 10) : '') + '">' +
+            '</div>' +
+            '<div class="field">' +
+              '<label>Próximo seguimiento</label>' +
+              '<input type="date" id="fechaProximoSeguimiento" value="' + (crmData.fechaProximoSeguimiento ? crmData.fechaProximoSeguimiento.substring(0, 10) : '') + '">' +
+            '</div>' +
+          '</div>' +
+          '<div class="field" style="margin-top:12px;">' +
+            '<label>Agregar nota</label>' +
+            '<div style="display:flex;gap:8px;">' +
+              '<textarea id="notaInput" placeholder="Escribe una nota de seguimiento..." style="flex:1;min-height:60px;resize:vertical;"></textarea>' +
+              '<button class="btn btn-ghost btn-sm" onclick="agregarNota()" style="align-self:flex-end;"><i class="ti ti-plus"></i></button>' +
+            '</div>' +
+          '</div>' +
+          '<div class="mt-12" id="notasLista">' + (notasHtml || '<div style="font-size:12px;color:var(--muted);text-align:center;padding:12px 0;">Sin notas aún</div>') + '</div>' +
+        '</div>' +
+      '</div>' +
+
+      '<!-- ZONA DERECHA: Pagos -->' +
+      '<div class="crm-right">' +
+        '<div class="section">' +
+          '<div class="section-title"><i class="ti ti-coin" style="color:var(--amber)"></i> Pagos</div>' +
+          '<div class="field">' +
+            '<label>Monto total</label>' +
+            '<div class="info-value amber mono" style="font-size:18px;padding:8px 0;">' + formatCOP(pagos.montoTotal || costos.precioFinal || costos.total || 0) + '</div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Tipo de anticipo</label>' +
+            '<div class="radio-group" id="tipoAnticipoGroup">' +
+              '<label><input type="radio" name="tipoAnticipo" value="30"' + (pagos.tipoAnticipo === '30' ? ' checked' : '') + ' onchange="actualizarAnticipo()"> 30%</label>' +
+              '<label><input type="radio" name="tipoAnticipo" value="50"' + (pagos.tipoAnticipo === '50' ? ' checked' : '') + ' onchange="actualizarAnticipo()"> 50%</label>' +
+              '<label><input type="radio" name="tipoAnticipo" value="otro"' + (pagos.tipoAnticipo === 'otro' ? ' checked' : '') + ' onchange="actualizarAnticipo()"> Otro</label>' +
+            '</div>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Monto anticipo</label>' +
+            '<input type="number" id="montoAnticipo" min="0" step="1000" value="' + (pagos.montoAnticipo || 0) + '" class="' + (pagos.tipoAnticipo === 'otro' ? '' : 'anticipo-readonly') + '" ' + (pagos.tipoAnticipo === 'otro' ? '' : 'readonly') + '>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Método de pago</label>' +
+            '<select id="metodoPago">' +
+              '<option value="efectivo"' + (pagos.metodoPago === 'efectivo' ? ' selected' : '') + '>Efectivo</option>' +
+              '<option value="transferencia"' + (pagos.metodoPago === 'transferencia' ? ' selected' : '') + '>Transferencia</option>' +
+              '<option value="nequi"' + (pagos.metodoPago === 'nequi' ? ' selected' : '') + '>Nequi</option>' +
+              '<option value="daviplata"' + (pagos.metodoPago === 'daviplata' ? ' selected' : '') + '>Daviplata</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Estado del pago</label>' +
+            '<select id="estadoPago">' +
+              '<option value="pendiente"' + (pagos.estadoPago === 'pendiente' ? ' selected' : '') + '>Pendiente</option>' +
+              '<option value="anticipo_recibido"' + (pagos.estadoPago === 'anticipo_recibido' ? ' selected' : '') + '>Anticipo recibido</option>' +
+              '<option value="pago_completo"' + (pagos.estadoPago === 'pago_completo' ? ' selected' : '') + '>Pago completo</option>' +
+            '</select>' +
+          '</div>' +
+          '<div class="field">' +
+            '<label>Notas de pago</label>' +
+            '<textarea id="notasPago" placeholder="Observaciones sobre el pago..." style="min-height:70px;resize:vertical;">' + esc(pagos.notas || '') + '</textarea>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+
+    '<div class="crm-actions">' +
+      '<button class="btn btn-ghost" onclick="volver()"><i class="ti ti-x"></i> Cancelar</button>' +
+      '<button class="btn btn-primary" onclick="guardarCambios()"><i class="ti ti-device-floppy"></i> Guardar cambios</button>' +
+    '</div>';
+
+  document.getElementById('contenido').innerHTML = html;
+}
+
+function toggleInfo() {
+  document.getElementById('infoSection').classList.toggle('collapsed');
+}
+
+function actProb(val) {
+  document.getElementById('probDisplay').textContent = val + '%';
+}
+
+function cambiarEstado(nuevoEstado) {
+  var r = CotizacionController.cambiarEstado(COTIZACION.id, nuevoEstado);
+  if (r.success) {
+    COTIZACION = r.data;
+    guardarFormEnMemoria();
+    mostrarToast('Estado cambiado a ' + CotizacionModel.getEstadoLabel(nuevoEstado));
+    render();
+  } else {
+    mostrarToast(r.error || 'Error al cambiar estado', 'error');
   }
+}
 
-  function cargar() {
-    const enProceso = JSON.parse(localStorage.getItem('cotipro_en_proceso') || '[]');
-    const cont = document.getElementById('procesoContainer');
+function agregarNota() {
+  var input = document.getElementById('notaInput');
+  var texto = input.value.trim();
+  if (!texto) { mostrarToast('Escribe una nota', 'error'); return; }
+  COTIZACION.crm = COTIZACION.crm || {};
+  COTIZACION.crm.notas = COTIZACION.crm.notas || [];
+  COTIZACION.crm.notas.push({ texto: texto, fecha: new Date().toISOString() });
+  COTIZACION.crm.fechaUltimoContacto = new Date().toISOString();
+  input.value = '';
+  guardarCambios(true);
+  mostrarToast('Nota agregada');
+  render();
+}
 
-    if (enProceso.length === 0) {
-      return;
+function actualizarAnticipo() {
+  var radios = document.getElementsByName('tipoAnticipo');
+  var seleccionado = '50';
+  for (var i = 0; i < radios.length; i++) {
+    if (radios[i].checked) { seleccionado = radios[i].value; break; }
+  }
+  var total = (COTIZACION.pagos && COTIZACION.pagos.montoTotal) || (COTIZACION.costos && (COTIZACION.costos.precioFinal || COTIZACION.costos.total)) || 0;
+  var input = document.getElementById('montoAnticipo');
+  if (seleccionado === 'otro') {
+    input.removeAttribute('readonly');
+    input.className = '';
+    input.value = input.value || 0;
+  } else {
+    input.setAttribute('readonly', true);
+    input.className = 'anticipo-readonly';
+    input.value = total * parseInt(seleccionado) / 100;
+  }
+}
+
+function guardarFormEnMemoria() {
+  COTIZACION.crm = COTIZACION.crm || {};
+  COTIZACION.pagos = COTIZACION.pagos || {};
+  var p = document.getElementById('probCierre');
+  if (p) COTIZACION.crm.probabilidadCierre = parseInt(p.value) || 0;
+  var mc = document.getElementById('metodoComunicacion');
+  if (mc) COTIZACION.crm.metodoComunicacion = mc.value;
+  var fuc = document.getElementById('fechaUltimoContacto');
+  if (fuc && fuc.value) COTIZACION.crm.fechaUltimoContacto = fuc.value;
+  var fps = document.getElementById('fechaProximoSeguimiento');
+  if (fps && fps.value) COTIZACION.crm.fechaProximoSeguimiento = fps.value;
+
+  var total = (COTIZACION.pagos.montoTotal || COTIZACION.costos.precioFinal || COTIZACION.costos.total || 0);
+  var radios = document.getElementsByName('tipoAnticipo');
+  for (var i = 0; i < radios.length; i++) {
+    if (radios[i].checked) { 
+      COTIZACION.pagos.tipoAnticipo = radios[i].value;
+      if (radios[i].value === 'otro') {
+        var ma = document.getElementById('montoAnticipo');
+        COTIZACION.pagos.montoAnticipo = parseFloat(ma ? ma.value : 0) || 0;
+      } else {
+        COTIZACION.pagos.montoAnticipo = total * parseInt(radios[i].value) / 100;
+      }
+      break;
     }
+  }
+  var mp = document.getElementById('metodoPago');
+  if (mp) COTIZACION.pagos.metodoPago = mp.value;
+  var ep = document.getElementById('estadoPago');
+  if (ep) COTIZACION.pagos.estadoPago = ep.value;
+  var np = document.getElementById('notasPago');
+  if (np) COTIZACION.pagos.notas = np.value;
+}
 
-    let html = '<div class="g-grid">';
-    enProceso.forEach((p, i) => {
-      html += `
-        <div class="g-card">
-          <div class="g-body">
-            <div class="g-name">${p.name || 'Sin nombre'}</div>
-            <div class="g-client">📝 Borrador ${new Date(p.date).toLocaleDateString('es-CO')}</div>
-            <div class="g-actions" style="margin-top:12px;">
-              <a href="cotizar.html?draft=${i}" class="btn btn-ghost btn-sm">✏️ Continuar</a>
-              <button class="btn btn-danger btn-sm" onclick="eliminar(${i})">🗑️</button>
-            </div>
-          </div>
-        </div>`;
-    });
-    html += '</div>';
-    cont.innerHTML = html;
-    document.getElementById('subtitulo').textContent = `${enProceso.length} cotización${enProceso.length!==1?'es':''} sin guardar`;
+function guardarCambios(silent) {
+  if (!COTIZACION) return;
+  guardarFormEnMemoria();
+  var r = CotizacionController.actualizar(COTIZACION.id, COTIZACION);
+  if (r.success) {
+    COTIZACION = r.data;
+    if (!silent) {
+      mostrarToast('Cambios guardados correctamente');
+      render();
+    }
+  } else {
+    mostrarToast(r.error || 'Error al guardar', 'error');
+  }
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function init() {
+  var id = getUrlParam('id');
+  if (!id) {
+    document.getElementById('contenido').innerHTML =
+      '<div class="empty-state" style="margin-top:40px;">' +
+        '<div class="empty-icon">⚠️</div>' +
+        '<div class="empty-title">ID de cotización no encontrado</div>' +
+        '<div class="empty-sub">No se especificó un ID en la URL. Usa ?id=123 para cargar una cotización.</div>' +
+        '<br/><a href="' + getRoute('COTIZACIONES') + '" class="btn btn-primary" style="margin-top:16px;">Volver a cotizaciones</a>' +
+      '</div>';
+    document.getElementById('pageSub').textContent = 'Error: sin ID';
+    return;
   }
 
-  function eliminar(idx) {
-    if (!confirm('¿Eliminar este borrador?')) return;
-    const enProceso = JSON.parse(localStorage.getItem('cotipro_en_proceso') || '[]');
-    enProceso.splice(idx, 1);
-    localStorage.setItem('cotipro_en_proceso', JSON.stringify(enProceso));
-    cargar();
-    mostrarToast('🗑️ Borrador eliminado');
+  var c = CotizacionController.obtenerPorId(id);
+  if (!c) {
+    document.getElementById('contenido').innerHTML =
+      '<div class="empty-state" style="margin-top:40px;">' +
+        '<div class="empty-icon">🔍</div>' +
+        '<div class="empty-title">Cotización no encontrada</div>' +
+        '<div class="empty-sub">No existe una cotización con el ID proporcionado.</div>' +
+        '<br/><a href="' + getRoute('COTIZACIONES') + '" class="btn btn-primary" style="margin-top:16px;">Volver a cotizaciones</a>' +
+      '</div>';
+    document.getElementById('pageSub').textContent = 'Error: no encontrada';
+    return;
   }
 
-  cargar();
+  COTIZACION = CotizacionModel.migrarPlanaANidada(c);
+  render();
+}
+
+init();
 </script>
 </body>
 </html>

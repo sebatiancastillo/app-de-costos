@@ -1,12 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Vikingos — Cotizaciones</title>
-  <link rel="stylesheet" href="../styles/base.css"/>
-  <link rel="stylesheet" href="../styles/layout.css"/>
-  <link rel="stylesheet" href="../styles/components.css"/>
+  <link rel="stylesheet" href="../styles/estilos.css"/>
+  <link rel="stylesheet" href="../styles/cotizacion.css"/>
   <style>
     .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
     .filtros-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
@@ -68,7 +67,7 @@
       </div>
       <div style="display:flex;gap:10px;">
         <button class="btn btn-ghost" onclick="CotizacionController.migrarDesdeLegacy()">🔄 Migrar datos</button>
-        <a href="../pages/html/cotizar.html" class="btn btn-primary">+ Nueva Cotización</a>
+        <a href="cotizar.html" class="btn btn-primary">+ Nueva Cotización</a>
       </div>
     </div>
 
@@ -118,7 +117,8 @@
 <div class="toast" id="toast"></div>
 
 <script src="../config/routes.js"></script>
-<script src="../shared/navbar.js"></script>
+<script src="../components/navbar.js"></script>
+<script src="../shared/calculos.js"></script>
 <script src="../modules/cotizaciones/Cotizacion.model.js"></script>
 <script src="../modules/cotizaciones/Cotizacion.controller.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -211,7 +211,7 @@
           <div class="empty-icon">📋</div>
           <div class="empty-title">Sin cotizaciones</div>
           <div class="empty-sub">Crea una nueva cotización o ajusta los filtros</div>
-          <br><a href="../pages/html/cotizar.html" class="btn btn-primary" style="margin-top:16px;">+ Nueva Cotización</a>
+          <br><a href="cotizar.html" class="btn btn-primary" style="margin-top:16px;">+ Nueva Cotización</a>
         </div>
       `;
       return;
@@ -227,7 +227,7 @@
         <div class="cotiz-card">
           <div class="cotiz-card-header">
             <div>
-              <div class="cotiz-titulo">${c.proyecto}</div>
+              <div class="cotiz-titulo">${typeof c.proyecto === 'object' ? c.proyecto?.nombre || '' : c.proyecto}</div>
               <div class="cotiz-id">#${c.id} · ${fecha}</div>
             </div>
             <span class="cotiz-estado" style="background:${estadoCfg.color}22;color:${estadoCfg.color};border:1px solid ${estadoCfg.color}44;">
@@ -238,19 +238,19 @@
           <div class="cotiz-info">
             <div class="cotiz-info-item">
               <span>Cliente</span>
-              ${c.cliente || '—'}
+              ${typeof c.cliente === 'object' ? c.cliente?.nombre || '—' : c.cliente || '—'}
             </div>
             <div class="cotiz-info-item">
               <span>Categoría</span>
-              ${c.categoria || 'otro'}
+              ${c.categoria || (c.proyecto?.tipo) || 'otro'}
             </div>
             <div class="cotiz-info-item">
               <span>Entrega</span>
-              ${c.tiempoEntrega || '—'} días
+              ${c.tiempoEntrega || c.costos?.tiempoEstimadoDias || '—'} días
             </div>
           </div>
 
-          <div class="cotiz-total">${fmt(c.costos?.total || 0)}</div>
+          <div class="cotiz-total">${fmt(c.costos?.total || c.costos?.precioFinal || 0)}</div>
 
           <div class="cotiz-actions">
             ${puedeEditar ? `
@@ -281,7 +281,7 @@
   }
 
   function editarCotizacion(id) {
-    window.location.href = `../pages/html/cotizar.html?edit=${id}`;
+    window.location.href = `cotizar.html?edit=${id}`;
   }
 
   function duplicarCotizacion(id) {
@@ -317,7 +317,17 @@
       ${c.fechaProduccion ? `<br>Producción: ${new Date(c.fechaProduccion).toLocaleDateString('es-CO')}` : ''}
     `;
 
-    document.getElementById('modalTitle').textContent = c.proyecto;
+    function _n(obj, flat, nested) {
+      const v = obj[flat];
+      if (v && typeof v === 'object') return obj[nested] || '—';
+      return v || '—';
+    }
+    document.getElementById('modalTitle').textContent = _n(c, 'proyecto', 'proyecto.nombre') || _n(c, 'cliente', 'cliente.nombre') || 'Cotización';
+    const nombreCliente = typeof c.cliente === 'object' ? (c.cliente?.nombre || '—') : (c.cliente || '—');
+    const telefono = typeof c.cliente === 'object' ? (c.cliente?.telefono || '—') : (c.telefono || '—');
+    const direccion = typeof c.cliente === 'object' ? (c.cliente?.direccion || '—') : (c.direccion || '—');
+    const descripcion = typeof c.proyecto === 'object' ? (c.proyecto?.descripcion || '—') : (c.descripcion || '—');
+    const total = c.costos?.total || c.costos?.precioFinal || 0;
     document.getElementById('modalBody').innerHTML = `
       <div style="margin-bottom:16px;">
         <span class="cotiz-estado" style="background:${estadoCfg.color}22;color:${estadoCfg.color};border:1px solid ${estadoCfg.color}44;">
@@ -325,17 +335,17 @@
         </span>
       </div>
       <div style="display:grid;gap:12px;font-size:14px;">
-        <div><strong>Cliente:</strong> ${c.cliente || '—'}</div>
-        <div><strong>Teléfono:</strong> ${c.telefono || '—'}</div>
-        <div><strong>Dirección:</strong> ${c.direccion || '—'}</div>
-        <div><strong>Descripción:</strong> ${c.descripcion || '—'}</div>
+        <div><strong>Cliente:</strong> ${nombreCliente}</div>
+        <div><strong>Teléfono:</strong> ${telefono}</div>
+        <div><strong>Dirección:</strong> ${direccion}</div>
+        <div><strong>Descripción:</strong> ${descripcion}</div>
         <div style="border-top:1px solid var(--border);padding-top:12px;">
           <strong>Costos:</strong><br>
-          Materiales: ${fmt(c.costos?.materiales || 0)}<br>
+          Materiales: ${fmt(c.costos?.materiales || c.costos?.materiales || 0)}<br>
           Mano de obra: ${fmt(c.costos?.manoObra || 0)}<br>
           Overhead: ${fmt(c.costos?.overheadMonto || 0)}<br>
           Margen: ${fmt(c.costos?.margenMonto || 0)}<br>
-          <strong style="color:var(--amber);font-size:18px;">Total: ${fmt(c.costos?.total || 0)}</strong>
+          <strong style="color:var(--amber);font-size:18px;">Total: ${fmt(total)}</strong>
         </div>
         <div style="color:var(--muted);font-size:12px;">${estadoInfo}</div>
       </div>

@@ -2,12 +2,20 @@
 // CONTROLADOR: CotizacionController.js - Lógica de negocio
 // ═══════════════════════════════════════════════════════════════
 
+function _nomProy(c) {
+  return typeof c.proyecto === 'object' ? (c.proyecto?.nombre || '') : (c.proyecto || '');
+}
+
 class CotizacionController {
   static STORAGE_KEY = 'vikingos_cotizaciones';
 
   static obtenerTodos() {
     const data = localStorage.getItem(this.STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
+    const list = data ? JSON.parse(data) : [];
+    return list.map(c => {
+      if (c.cliente && typeof c.cliente === 'object' && c.cliente.nombre !== undefined) return c;
+      return CotizacionModel.migrarPlanaANidada(c);
+    });
   }
 
   static guardarTodos(cotizaciones) {
@@ -38,7 +46,7 @@ class CotizacionController {
     return { success: true, data: cotizacion };
   }
 
-  static actualizar(id, nuevosDatos) {
+  static actualizar(id, nuevosDatos, esNuevoFormato) {
     const todas = this.obtenerTodos();
     const idx = todas.findIndex(c => c.id == id);
     
@@ -51,14 +59,27 @@ class CotizacionController {
       return { success: false, error: 'No se puede editar esta cotización en su estado actual' };
     }
 
-    const costos = CotizacionModel.calcularCostos(nuevosDatos);
-    const actualizada = {
-      ...original,
-      ...nuevosDatos,
-      costos,
-      versi: original.versi + 1,
-      fechaActualizacion: new Date().toISOString()
-    };
+    let actualizada;
+    if (esNuevoFormato) {
+      actualizada = CotizacionModel.crearDesdeFormulario({
+        ...original,
+        ...nuevosDatos,
+        id: original.id,
+        numero: original.numero,
+        fechaCreacion: original.fechaCreacion
+      });
+      actualizada.versi = (original.versi || 0) + 1;
+      actualizada.fechaActualizacion = new Date().toISOString();
+    } else {
+      const costos = CotizacionModel.calcularCostos(nuevosDatos);
+      actualizada = {
+        ...original,
+        ...nuevosDatos,
+        costos,
+        versi: original.versi + 1,
+        fechaActualizacion: new Date().toISOString()
+      };
+    }
 
     const errores = CotizacionModel.validar(actualizada);
     if (errores.length > 0) {
@@ -119,7 +140,8 @@ class CotizacionController {
       if (criterios.estado && c.estado !== criterios.estado) return false;
       if (criterios.cliente) {
         const search = criterios.cliente.toLowerCase();
-        if (!c.cliente.toLowerCase().includes(search)) return false;
+        const nombreCliente = (typeof c.cliente === 'object') ? (c.cliente?.nombre || '') : (c.cliente || '');
+        if (!nombreCliente.toLowerCase().includes(search)) return false;
       }
       if (criterios.categoria && c.categoria !== criterios.categoria) return false;
       
@@ -198,8 +220,7 @@ class CotizacionController {
           alertas.push({
             tipo: 'warning',
             titulo: 'Cotización sin respuesta',
-            mensaje: `${c.proyecto} enviada hace ${diasSinRespuesta} días`,
-            cotizacionId: c.id
+            mensaje: `${_nomProy(c)} enviada hace ${diasSinRespuesta} días`,
           });
         }
       }
@@ -210,8 +231,7 @@ class CotizacionController {
           alertas.push({
             tipo: 'info',
             titulo: 'Pendiente iniciar producción',
-            mensaje: `${c.proyecto} aprobada hace ${diasAprobada} días`,
-            cotizacionId: c.id
+            mensaje: `${_nomProy(c)} aprobada hace ${diasAprobada} días`,
           });
         }
       }
@@ -221,7 +241,7 @@ class CotizacionController {
           alertas.push({
             tipo: 'recordatorio',
             titulo: r.titulo || 'Recordatorio',
-            mensaje: `${c.proyecto}: ${r.nota}`,
+            mensaje: `${_nomProy(c)}: ${r.nota}`,
             cotizacionId: c.id
           });
         }
@@ -238,13 +258,15 @@ class CotizacionController {
     const original = this.obtenerPorId(id);
     if (!original) return { success: false, error: 'No encontrada' };
 
-    const copia = CotizacionModel.crear({
+    const nomProy = typeof original.proyecto === 'object' ? original.proyecto?.nombre : original.proyecto;
+    const copia = CotizacionModel.crearDesdeFormulario({
       ...original,
       id: Date.now(),
-      proyecto: `${original.proyecto} (Copia)`,
-      estado: 'pendiente',
+      nombreProyecto: `${nomProy || 'Proyecto'} (Copia)`,
+      estado: 'borrador',
       fechaCreacion: new Date().toISOString(),
-      fechaActualizacion: new Date().toISOString()
+      fechaActualizacion: new Date().toISOString(),
+      numero: this.generarNumero()
     });
     copia.recordatorios = [];
 
@@ -253,6 +275,42 @@ class CotizacionController {
     this.guardarTodos(todas);
 
     return { success: true, data: copia };
+  }
+
+  static NUMERO_KEY = 'vikingos_contador_cot';
+
+  static generarNumero() {
+    const year = new Date().getFullYear();
+    let count = parseInt(localStorage.getItem(this.NUMERO_KEY) || '0', 10);
+    count++;
+    localStorage.setItem(this.NUMERO_KEY, count.toString());
+    const padded = String(count).padStart(3, '0');
+    return `COT-${year}-${padded}`;
+  }
+
+  static guardar(datos, estado) {
+    const datosCompletos = { ...datos, estado: estado || 'borrador' };
+    if (!datosCompletos.numero) {
+      datosCompletos.numero = this.generarNumero();
+    }
+    const cotizacion = CotizacionModel.crearDesdeFormulario(datosCompletos);
+    const errores = CotizacionModel.validar(cotizacion);
+    if (errores.length > 0) {
+      return { success: false, errores };
+    }
+    const todas = this.obtenerTodos();
+    const idx = todas.findIndex(c => c.id == cotizacion.id);
+    if (idx !== -1) {
+      todas[idx] = { ...todas[idx], ...cotizacion, versi: (todas[idx].versi || 0) + 1, fechaActualizacion: new Date().toISOString() };
+    } else {
+      todas.unshift(cotizacion);
+    }
+    this.guardarTodos(todas);
+    return { success: true, data: cotizacion };
+  }
+
+  static calcularPrecio(costosObj, margen) {
+    return CotizacionModel.calcularPrecioFinal(costosObj, margen);
   }
 
   static migrarDesdeLegacy() {
@@ -287,6 +345,50 @@ class CotizacionController {
     localStorage.removeItem('cotipro_proyectos');
 
     return { success: true, migradas: nuevas.length };
+  }
+
+  static exportarJSON(id) {
+    const c = this.obtenerPorId(id);
+    if (!c) return { success: false, error: 'No encontrada' };
+    return { success: true, data: JSON.stringify(c, null, 2) };
+  }
+
+  static importarJSON(jsonString) {
+    try {
+      const datos = JSON.parse(jsonString);
+      const costos = CotizacionModel.calcularCostos(datos);
+      const cotizacion = CotizacionModel.crear({ ...datos, costos, id: Date.now() });
+      const errores = CotizacionModel.validar(cotizacion);
+      if (errores.length > 0) return { success: false, errores };
+      const todas = this.obtenerTodos();
+      todas.unshift(cotizacion);
+      this.guardarTodos(todas);
+      return { success: true, data: cotizacion };
+    } catch (e) {
+      return { success: false, error: 'JSON inválido: ' + e.message };
+    }
+  }
+
+  static generarDatosPDF(id) {
+    const c = this.obtenerPorId(id);
+    if (!c) return null;
+    return {
+      estimateNumber: '#' + c.id,
+      createdDate: c.fechaCreacion,
+      client: { name: c.cliente, email: '', phone: c.telefono, address: c.direccion, city: '', company: '' },
+      project: { name: _nomProy(c), category: c.categoria || c.proyecto?.tipo || '', description: typeof c.proyecto === 'object' ? c.proyecto?.descripcion || '' : c.descripcion || '', deliveryDays: c.tiempoEntrega || c.costos?.tiempoEstimadoDias || 15 },
+      items: (c.materiales || []).map(m => ({
+        description: m.nombre, quantity: m.cantidad, unit: m.unidad, unitCost: m.precio, amount: (m.cantidad || 0) * (m.precio || 0)
+      })),
+      financials: {
+        subtotal: c.costos?.subtotal || 0, taxPercentage: 10, taxAmount: 0,
+        discountPercentage: 0, discountAmount: 0,
+        overheadPercentage: c.overhead || 15, overheadAmount: c.costos?.overheadMonto || 0,
+        marginPercentage: c.margen || 30, marginAmount: c.costos?.margenMonto || 0,
+        total: c.costos?.total || 0
+      },
+      notes: '', terms: 'Válido por 30 días', authorizedBy: 'Vikingos Carpintería'
+    };
   }
 }
 

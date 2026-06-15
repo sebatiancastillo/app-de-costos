@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - Vikingos</title>
+  <link rel="stylesheet" href="../styles/estilos.css">
+  <link rel="stylesheet" href="../styles/cotizacion.css">
+  <link rel="stylesheet" href="../styles/dashboard.css">
+</head>
+<body>
+<div class="app-layout">
+<aside class="sidebar" id="sidebar"></aside>
+<main class="main-area">
+  <div class="content">
+    <div class="navbar-container">
+      <div class="navbar-left">
+        <h1 class="navbar-title">🏆 Vikingos Carpintería</h1>
+        <span class="navbar-subtitle">Módulo de Cotizaciones</span>
+      </div>
+      <div class="navbar-right">
+        <button class="btn btn-primary" onclick="navegarA('cotizar.html')">
+          ➕ Nueva Cotización
+        </button>
+        <button class="btn btn-secondary" onclick="descargarBackup()">
+          💾 Respaldar
+        </button>
+      </div>
+    </div>
+
+  <!-- CONTENEDOR PRINCIPAL -->
+  <div class="dashboard-container">
+    
+    <!-- SECCIÓN: ESTADÍSTICAS RÁPIDAS -->
+    <section class="stats-section">
+      <div class="stat-card">
+        <div class="stat-icon">📊</div>
+        <div class="stat-content">
+          <p class="stat-label">Total Cotizaciones</p>
+          <h3 class="stat-value" id="stat-total">0</h3>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-content">
+          <p class="stat-label">Monto Total</p>
+          <h3 class="stat-value" id="stat-monto">$0</h3>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">✅</div>
+        <div class="stat-content">
+          <p class="stat-label">Aprobadas</p>
+          <h3 class="stat-value stat-success" id="stat-aprobadas">0</h3>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">⏳</div>
+        <div class="stat-content">
+          <p class="stat-label">Pendientes</p>
+          <h3 class="stat-value stat-warning" id="stat-pendientes">0</h3>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">🔧</div>
+        <div class="stat-content">
+          <p class="stat-label">En Producción</p>
+          <h3 class="stat-value stat-info" id="stat-produccion">0</h3>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+          <p class="stat-label">Margen Promedio</p>
+          <h3 class="stat-value stat-success" id="stat-margen">0%</h3>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECCIÓN: FILTROS Y BÚSQUEDA -->
+    <section class="filters-section">
+      <div class="filters-container">
+        <div class="filter-group">
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="🔍 Buscar por cliente, proyecto..." 
+            class="search-input"
+            onkeyup="aplicarFiltros()"
+          >
+        </div>
+
+        <div class="filter-group">
+          <select id="filterEstado" class="filter-select" onchange="aplicarFiltros()">
+            <option value="">Todos los Estados</option>
+            <option value="pendiente">📋 Pendiente</option>
+            <option value="enviada">📤 Enviada</option>
+            <option value="aprobada">✅ Aprobada</option>
+            <option value="produccion">🔧 Producción</option>
+            <option value="finalizada">🏁 Finalizada</option>
+            <option value="rechazada">❌ Rechazada</option>
+            <option value="archivada">📦 Archivada</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <input 
+            type="date" 
+            id="filterFechaDesde" 
+            class="filter-input" 
+            onchange="aplicarFiltros()"
+          >
+        </div>
+
+        <div class="filter-group">
+          <input 
+            type="date" 
+            id="filterFechaHasta" 
+            class="filter-input" 
+            onchange="aplicarFiltros()"
+          >
+        </div>
+
+        <div class="filter-group">
+          <select id="filterOrden" class="filter-select" onchange="aplicarFiltros()">
+            <option value="reciente">Más Reciente</option>
+            <option value="antiguo">Más Antiguo</option>
+            <option value="monto-alto">Mayor Monto</option>
+            <option value="monto-bajo">Menor Monto</option>
+          </select>
+        </div>
+
+        <button class="btn btn-secondary" onclick="limpiarFiltros()">Limpiar</button>
+      </div>
+    </section>
+
+    <!-- SECCIÓN: GRÁFICO DE ESTADOS -->
+    <section class="chart-section">
+      <h2>📊 Distribución de Estados</h2>
+      <div class="chart-container" id="chartContainer">
+        <canvas id="estadosChart"></canvas>
+      </div>
+    </section>
+
+    <!-- SECCIÓN: TABLA DE COTIZACIONES -->
+    <section class="quotations-section">
+      <div class="section-header">
+        <h2>📋 Cotizaciones</h2>
+        <span class="result-count" id="resultCount">0 resultados</span>
+      </div>
+
+      <div class="table-responsive">
+        <table class="quotations-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cliente</th>
+              <th>Proyecto</th>
+              <th>Monto</th>
+              <th>Estado</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="quotationsBody">
+            <tr class="empty-state">
+              <td colspan="7">No hay cotizaciones. Crea una nueva para comenzar.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- SECCIÓN: ALERTAS Y RECORDATORIOS -->
+    <section class="alerts-section" id="alertsSection" style="display: none;">
+      <h2>⏰ Recordatorios y Alertas</h2>
+      <div class="alerts-container" id="alertsContainer">
+        <!-- Se llenará dinámicamente -->
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL: VER DETALLES -->
+  <div class="modal" id="modalDetalles">
+    <div class="modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="modalTitle">Detalles de Cotización</h2>
+        <button class="modal-close" onclick="cerrarModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <!-- Se llenará dinámicamente -->
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="cerrarModal()">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CAMBIAR ESTADO -->
+  <div class="modal" id="modalCambiarEstado">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Cambiar Estado</h2>
+        <button class="modal-close" onclick="cerrarModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="cambiarEstadoBody">
+        <!-- Se llenará dinámicamente -->
+      </div>
+    </div>
+  </div>
+
+  <!-- SCRIPTS -->
+  <script src="../shared/storage.js"></script>
+  <script src="../modules/cotizaciones/Cotizacion.model.js"></script>
+  <script src="../modules/cotizaciones/Cotizacion.controller.js"></script>
+  <script src="../modules/cotizaciones/DashboardView.js"></script>
+  <script src="../shared/utils.js"></script>
+  
+  <script>
+    // Inicialización
+    let allQuotations = [];
+    let filteredQuotations = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      cargarDatos();
+      inicializarEventos();
+    });
+
+    function cargarDatos() {
+      allQuotations = CotizacionController.obtenerTodos();
+      filteredQuotations = [...allQuotations];
+      actualizarEstadisticas();
+      renderizarTabla();
+      verificarAlertas();
+    }
+
+    function inicializarEventos() {
+      document.addEventListener('cotizacionGuardada', cargarDatos);
+      document.addEventListener('cotizacionEliminada', cargarDatos);
+    }
+
+    function aplicarFiltros() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const estado = document.getElementById('filterEstado').value;
+      const fechaDesde = document.getElementById('filterFechaDesde').value;
+      const fechaHasta = document.getElementById('filterFechaHasta').value;
+
+      filteredQuotations = allQuotations.filter(q => {
+        const cliente = (typeof q.cliente === 'object' ? q.cliente.nombre : q.cliente).toLowerCase();
+        const proyecto = (q.proyecto || '').toLowerCase();
+        
+        const coincideSearch = !search || cliente.includes(search) || proyecto.includes(search);
+        const coincideEstado = !estado || q.estado === estado;
+        
+        const fechaCreacion = new Date(q.fechaCreacion).toISOString().split('T')[0];
+        const coincideFecha = 
+          (!fechaDesde || fechaCreacion >= fechaDesde) &&
+          (!fechaHasta || fechaCreacion <= fechaHasta);
+
+        return coincideSearch && coincideEstado && coincideFecha;
+      });
+
+      aplicarOrden();
+      renderizarTabla();
+      actualizarContador();
+    }
+
+    function aplicarOrden() {
+      const orden = document.getElementById('filterOrden').value;
+      
+      if (orden === 'reciente') {
+        filteredQuotations.sort((a, b) => new Date(b.fechaCreacion) - new Date(a.fechaCreacion));
+      } else if (orden === 'antiguo') {
+        filteredQuotations.sort((a, b) => new Date(a.fechaCreacion) - new Date(b.fechaCreacion));
+      } else if (orden === 'monto-alto') {
+        filteredQuotations.sort((a, b) => (b.costos?.total || 0) - (a.costos?.total || 0));
+      } else if (orden === 'monto-bajo') {
+        filteredQuotations.sort((a, b) => (a.costos?.total || 0) - (b.costos?.total || 0));
+      }
+    }
+
+    function renderizarTabla() {
+      const tbody = document.getElementById('quotationsBody');
+      
+      if (filteredQuotations.length === 0) {
+        tbody.innerHTML = '<tr class="empty-state"><td colspan="7">No hay cotizaciones que coincidan.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = filteredQuotations.map(q => {
+        const estadoConfig = ESTADOS[q.estado?.toUpperCase()] || ESTADOS.PENDIENTE;
+        const fecha = new Date(q.fechaCreacion).toLocaleDateString('es-CO');
+        const monto = formatearMoneda(q.costos?.total || 0);
+        const cliente = typeof q.cliente === 'object' ? q.cliente.nombre : q.cliente;
+        const numero = q.numero || `#${q.id}`;
+
+        return `
+          <tr class="cotizacion-row" data-id="${q.id}">
+            <td><strong>${numero}</strong></td>
+            <td>${cliente}</td>
+            <td>${q.proyecto || '—'}</td>
+            <td>${monto}</td>
+            <td>
+              <span class="badge badge-${estadoConfig.id}">
+                ${estadoConfig.icon} ${estadoConfig.label}
+              </span>
+            </td>
+            <td>${fecha}</td>
+            <td>
+              <div class="actions">
+                <button class="btn-icon" onclick="verDetalles(${q.id})" title="Ver">👁️</button>
+                <button class="btn-icon" onclick="editarCotizacion(${q.id})" title="Editar">✏️</button>
+                <button class="btn-icon" onclick="cambiarEstado(${q.id})" title="Estado">↔️</button>
+                <button class="btn-icon" onclick="eliminarCotizacion(${q.id})" title="Eliminar">🗑️</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function actualizarEstadisticas() {
+      const total = allQuotations.length;
+      const monto = allQuotations.reduce((sum, q) => sum + (q.costos?.total || 0), 0);
+      const aprobadas = allQuotations.filter(q => q.estado === 'aprobada').length;
+      const pendientes = allQuotations.filter(q => q.estado === 'pendiente').length;
+      const produccion = allQuotations.filter(q => q.estado === 'produccion').length;
+      const margenProm = allQuotations.length > 0 
+        ? Math.round(allQuotations.reduce((sum, q) => sum + (q.margen || 30), 0) / total)
+        : 0;
+
+      document.getElementById('stat-total').textContent = total;
+      document.getElementById('stat-monto').textContent = formatearMoneda(monto);
+      document.getElementById('stat-aprobadas').textContent = aprobadas;
+      document.getElementById('stat-pendientes').textContent = pendientes;
+      document.getElementById('stat-produccion').textContent = produccion;
+      document.getElementById('stat-margen').textContent = margenProm + '%';
+    }
+
+    function actualizarContador() {
+      document.getElementById('resultCount').textContent = 
+        `${filteredQuotations.length} resultado${filteredQuotations.length !== 1 ? 's' : ''}`;
+    }
+
+    function limpiarFiltros() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterEstado').value = '';
+      document.getElementById('filterFechaDesde').value = '';
+      document.getElementById('filterFechaHasta').value = '';
+      document.getElementById('filterOrden').value = 'reciente';
+      filteredQuotations = [...allQuotations];
+      renderizarTabla();
+      actualizarContador();
+    }
+
+    function verDetalles(id) {
+      const q = allQuotations.find(c => c.id == id);
+      if (!q) return;
+
+      const cliente = typeof q.cliente === 'object' ? q.cliente.nombre : q.cliente;
+      const estadoConfig = ESTADOS[q.estado?.toUpperCase()] || ESTADOS.PENDIENTE;
+      const materiales = q.materiales?.map(m => `
+        <tr>
+          <td>${m.nombre}</td>
+          <td>${m.cantidad}</td>
+          <td>${formatearMoneda(m.precio)}</td>
+          <td>${formatearMoneda(m.cantidad * m.precio)}</td>
+        </tr>
+      `).join('') || '<tr><td colspan="4">Sin materiales</td></tr>';
+
+      const html = `
+        <div class="detalles-cotizacion">
+          <div class="detalles-row">
+            <div class="detalles-col">
+              <h3>Información General</h3>
+              <p><strong>Número:</strong> ${q.numero || `#${q.id}`}</p>
+              <p><strong>Cliente:</strong> ${cliente}</p>
+              <p><strong>Proyecto:</strong> ${q.proyecto || '—'}</p>
+              <p><strong>Estado:</strong> <span class="badge badge-${estadoConfig.id}">${estadoConfig.icon} ${estadoConfig.label}</span></p>
+            </div>
+            <div class="detalles-col">
+              <h3>Fechas</h3>
+              <p><strong>Creada:</strong> ${new Date(q.fechaCreacion).toLocaleString('es-CO')}</p>
+              <p><strong>Actualizada:</strong> ${new Date(q.fechaActualizacion).toLocaleString('es-CO')}</p>
+              <p><strong>Enviada:</strong> ${q.fechaEnvio ? new Date(q.fechaEnvio).toLocaleString('es-CO') : '—'}</p>
+            </div>
+          </div>
+
+          <h3>Materiales</h3>
+          <table class="detalles-table">
+            <thead>
+              <tr>
+                <th>Material</th>
+                <th>Cantidad</th>
+                <th>Precio</th>
+                <th>Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${materiales}
+            </tbody>
+          </table>
+
+          <h3>Cálculo de Costos</h3>
+          <div class="costos-detalle">
+            <div class="costo-row">
+              <span>Materiales:</span>
+              <strong>${formatearMoneda(q.costos?.materiales || 0)}</strong>
+            </div>
+            <div class="costo-row">
+              <span>Mano de Obra:</span>
+              <strong>${formatearMoneda(q.costos?.manoObra || 0)}</strong>
+            </div>
+            <div class="costo-row">
+              <span>Overhead (${q.overhead || 15}%):</span>
+              <strong>${formatearMoneda(q.costos?.overheadMonto || 0)}</strong>
+            </div>
+            <div class="costo-row border-top">
+              <span>Subtotal:</span>
+              <strong>${formatearMoneda(q.costos?.subtotal + (q.costos?.overheadMonto || 0) || 0)}</strong>
+            </div>
+            <div class="costo-row">
+              <span>Margen (${q.margen || 30}%):</span>
+              <strong>${formatearMoneda(q.costos?.margenMonto || 0)}</strong>
+            </div>
+            <div class="costo-row border-top total">
+              <span>TOTAL:</span>
+              <strong>${formatearMoneda(q.costos?.total || 0)}</strong>
+            </div>
+          </div>
+
+          ${q.notas ? `<div class="notas-section"><h3>Notas</h3><p>${q.notas}</p></div>` : ''}
+        </div>
+      `;
+
+      document.getElementById('modalTitle').textContent = `Cotización #${q.numero || q.id}`;
+      document.getElementById('modalBody').innerHTML = html;
+      document.getElementById('modalDetalles').style.display = 'flex';
+    }
+
+    function editarCotizacion(id) {
+      navegarA(`cotizar.html?id=${id}`);
+    }
+
+    function cambiarEstado(id) {
+      const q = allQuotations.find(c => c.id == id);
+      if (!q) return;
+
+      const estadosPermitidos = FLUJO_ESTADOS[q.estado] || [];
+      
+      if (estadosPermitidos.length === 0) {
+        alert('Esta cotización no puede cambiar de estado.');
+        return;
+      }
+
+      const opcionesHTML = estadosPermitidos.map(estado => {
+        const config = ESTADOS[estado?.toUpperCase()] || {};
+        return `
+          <button class="btn btn-block" onclick="confirmarCambioEstado(${id}, '${estado}')">
+            ${config.icon} Cambiar a ${config.label}
+          </button>
+        `;
+      }).join('');
+
+      document.getElementById('cambiarEstadoBody').innerHTML = opcionesHTML;
+      document.getElementById('modalCambiarEstado').style.display = 'flex';
+    }
+
+    function confirmarCambioEstado(id, nuevoEstado) {
+      const resultado = CotizacionController.cambiarEstado(id, nuevoEstado);
+      
+      if (resultado.success) {
+        alert(`Estado actualizado a ${ESTADOS[nuevoEstado?.toUpperCase()].label}`);
+        document.getElementById('modalCambiarEstado').style.display = 'none';
+        cargarDatos();
+      } else {
+        alert(`Error: ${resultado.error}`);
+      }
+    }
+
+    function eliminarCotizacion(id) {
+      if (!confirm('¿Seguro que deseas eliminar esta cotización? Esta acción no se puede deshacer.')) {
+        return;
+      }
+
+      const resultado = CotizacionController.eliminar(id);
+      if (resultado.success) {
+        alert('Cotización eliminada');
+        cargarDatos();
+      } else {
+        alert(`Error: ${resultado.error}`);
+      }
+    }
+
+    function cerrarModal() {
+      document.getElementById('modalDetalles').style.display = 'none';
+      document.getElementById('modalCambiarEstado').style.display = 'none';
+    }
+
+    function verificarAlertas() {
+      const alertas = [];
+      const ahora = new Date();
+
+      allQuotations.forEach(q => {
+        if (q.estado === 'enviada') {
+          const diasEnviada = Math.floor((ahora - new Date(q.fechaEnvio)) / (1000 * 60 * 60 * 24));
+          if (diasEnviada > 3) {
+            alertas.push({
+              tipo: 'info',
+              mensaje: `Cotización #${q.numero || q.id} enviada hace ${diasEnviada} días. Considera hacer seguimiento.`
+            });
+          }
+        }
+      });
+
+      const alertsSection = document.getElementById('alertsSection');
+      const alertsContainer = document.getElementById('alertsContainer');
+
+      if (alertas.length > 0) {
+        alertsSection.style.display = 'block';
+        alertsContainer.innerHTML = alertas.map(a => `
+          <div class="alert alert-${a.tipo}">
+            <p>${a.mensaje}</p>
+          </div>
+        `).join('');
+      } else {
+        alertsSection.style.display = 'none';
+      }
+    }
+
+    function descargarBackup() {
+      const data = JSON.stringify(allQuotations, null, 2);
+      const blob = new Blob([data], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `backup-cotizaciones-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function navegarA(url) {
+      window.location.href = url;
+    }
+
+    function formatearMoneda(monto) {
+      return new Intl.NumberFormat('es-CO', { 
+        style: 'currency', 
+        currency: 'COP',
+        minimumFractionDigits: 0
+      }).format(monto);
+    }
+  </script>
+</div><!-- /content -->
+<script src="../config/routes.js"></script>
+<script src="../components/navbar.js"></script>
+<script>renderSidebar('dashboard');</script>
+</main>
+</div>
+</body>
+</html>
