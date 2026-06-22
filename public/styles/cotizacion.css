@@ -201,6 +201,30 @@
 .btn-cliente-pdf{background:#7a4f2d;color:white;}
 .btn-cliente-wa{background:#25D366;color:white;}
 
+/* ── Item cards (Tab 2) ── */
+.item-card{border:1px solid var(--border);border-radius:10px;background:var(--card2);overflow:hidden;margin-bottom:10px;}
+.item-card-header{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--border);}
+.item-number{font-weight:600;font-size:13px;color:var(--cream);}
+.item-badge{font-size:10px;padding:2px 8px;border-radius:999px;font-weight:600;text-transform:uppercase;letter-spacing:0.3px;}
+.item-badge-catalogo{background:rgba(232,168,76,0.15);color:var(--amber);}
+.item-badge-personalizado{background:rgba(92,184,216,0.15);color:#5cb8d8;}
+.item-name-header{flex:1;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.item-card-body{padding:14px;}
+.item-actions{display:flex;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border);}
+.items-resumen{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-top:8px;}
+.ir-line{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);padding:3px 0;}
+.ir-lbl{color:var(--muted);}
+.ir-val{font-family:'JetBrains Mono',monospace;color:var(--cream);}
+.agregar-item-bar .field label{font-size:11px;color:var(--muted);margin-bottom:3px;display:block;}
+
+/* ── Tipo selector modal ── */
+.tipo-selector{display:flex;gap:10px;}
+.tipo-card{flex:1;padding:20px 14px;border-radius:10px;border:1px solid var(--border);text-align:center;cursor:pointer;background:var(--card2);transition:all 0.15s;}
+.tipo-card:hover{border-color:var(--amber-dim);background:rgba(232,168,76,0.06);}
+.tipo-icon{font-size:28px;display:block;margin-bottom:6px;}
+.tipo-title{font-weight:600;font-size:14px;color:var(--cream);margin-bottom:4px;}
+.tipo-desc{font-size:11px;color:var(--muted);}
+
 /* ── Tabs de navegacion ── */
 .tab-nav{display:flex;gap:2px;background:var(--card2);border:1px solid var(--border);border-radius:10px;padding:3px;overflow-x:auto;flex-shrink:0;}
 .tab-btn{flex:1;min-width:fit-content;padding:8px 12px;font-size:12px;font-weight:500;background:none;border:none;border-radius:8px;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all 0.15s;font-family:'DM Sans',sans-serif;}

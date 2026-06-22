@@ -114,17 +114,6 @@ body{background:#faf8f5;color:#1a1a1a;font-family:'DM Sans',sans-serif;font-size
     return '';
   }
 
-  function getAcabados(c) {
-    const arr = c.especificaciones?.acabados;
-    if (Array.isArray(arr) && arr.length) return arr;
-    if (c.colorNombre) return [c.colorNombre];
-    return [];
-  }
-
-  function getMaterialPrincipal(c) {
-    return safeVal(c, 'especificaciones.materialPrincipal', '') || safeVal(c, 'especificaciones.especieMadera', '');
-  }
-
   function getNumero(c, original) {
     const n = safeVal(c, 'numero', '');
     if (n) return n;
@@ -166,10 +155,7 @@ body{background:#faf8f5;color:#1a1a1a;font-family:'DM Sans',sans-serif;font-size
     const total = getTotalPrecio(c, original);
     const tiempoEntrega = safeVal(c, 'costos.tiempoEstimadoDias', '') || safeVal(c, 'tiempoEntrega', '');
     const notas = c.notas || '';
-    const acabados = getAcabados(c);
-    const materialPrincipal = getMaterialPrincipal(c);
     const medidasStr = getMedidasStr(c);
-    const colorTono = safeVal(c, 'especificaciones.colorTono', '') || safeVal(c, 'colorNombre', '');
 
     function fmt(n) {
       try { return formatCOP(n); } catch(e) { return '$ ' + Number(n||0).toLocaleString('es-CO'); }
@@ -208,13 +194,6 @@ body{background:#faf8f5;color:#1a1a1a;font-family:'DM Sans',sans-serif;font-size
         ${proyectoDescripcion ? `<div class="descripcion-texto">${esc(proyectoDescripcion)}</div>` : ''}
       </div>
 
-      ${materialPrincipal || acabados.length || colorTono ? `
-      <div class="section">
-        <div class="section-title">Materiales y Acabados</div>
-        ${materialPrincipal ? `<div class="data-row"><span class="data-label">Material</span><span class="data-value">${esc(materialPrincipal)}</span></div>` : ''}
-        ${colorTono ? `<div class="data-row"><span class="data-label">Color/Tono</span><span class="data-value">${esc(colorTono)}</span></div>` : ''}
-        ${acabados.length ? `<div class="data-row"><span class="data-label">Acabados</span><div class="tag-list">${acabados.map(a => `<span class="tag">${esc(a)}</span>`).join('')}</div></div>` : ''}
-      </div>` : ''}
 
       ${medidasStr ? `
       <div class="section">

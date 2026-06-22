@@ -578,13 +578,24 @@
       const valEl = document.getElementById('previewValidez');
       if (valEl) valEl.textContent = d.proyecto?.validez ? '⏱ Válido por ' + d.proyecto.validez + ' días' : '';
 
-      const matLabel = { madera_solida: 'Madera sólida', mdf: 'MDF', melamina: 'Melamina', madera_recuperada: 'Madera recuperada', mixto: 'Mixto' };
-      document.getElementById('previewMaterial').textContent = matLabel[d.especificaciones?.materialPrincipal] || d.especificaciones?.materialPrincipal || '—';
-      document.getElementById('previewAcabado').textContent = (d.especificaciones?.acabados || []).join(', ') || '—';
+      document.getElementById('previewMaterial').textContent = '—';
 
       const medidas = d.especificaciones?.medidas || {};
       document.getElementById('previewMedidas').textContent =
         [medidas.largo, medidas.ancho, medidas.alto].filter(Boolean).join(' × ') + (medidas.grosor ? ` (grosor ${medidas.grosor}mm)` : '') || '—';
+
+      const items = d.items || [];
+      const itemsSummaryEl = document.getElementById('previewItemsSummary');
+      if (itemsSummaryEl) {
+        if (items.length > 0) {
+          var catCount = 0, persCount = 0, catTotal = 0;
+          items.forEach(function(it) {
+            if (it.tipo === 'catalogo') { catCount++; catTotal += (it.subtotal || 0); }
+            else { persCount++; }
+          });
+          itemsSummaryEl.innerHTML = items.length + ' ítem' + (items.length !== 1 ? 's' : '') + ' (' + catCount + ' catálogo, ' + persCount + ' personalizado' + (persCount !== 1 ? 's' : '') + ')';
+        } else { itemsSummaryEl.textContent = ''; }
+      }
 
       const cs = d.costos || {};
       const suma = (cs.materiales || 0) + (cs.manoObra || 0) + (cs.herrajes || 0) + (cs.herramientas || 0) + (cs.transporte || 0) + (cs.subcontratos || 0);
@@ -664,7 +675,6 @@
       const v = id => g(id)?.value || '';
       const n = id => parseFloat(g(id)?.value) || 0;
 
-      const acabados = Array.from(document.querySelectorAll('input[name="acabado"]:checked')).map(c => c.value);
       const cortes = Array.from(document.querySelectorAll('input[name="corteEspecial"]:checked')).map(c => c.value);
 
       return {
@@ -690,10 +700,6 @@
         validezCotizacion: v('validezCotizacion'),
         ubicacionInstalacion: g('ubicacionInterior')?.checked ? 'interior' : g('ubicacionExterior')?.checked ? 'exterior' : g('ubicacionHumeda')?.checked ? 'area_humeda' : 'otro',
         fechaEntregaDeseada: v('fechaEntregaDeseada'),
-        materialPrincipal: v('materialPrincipal'),
-        especieMadera: v('especieMadera'),
-        acabados,
-        colorTono: v('colorTono'),
         largo: n('largo'),
         ancho: n('ancho'),
         alto: n('alto'),
@@ -701,8 +707,7 @@
         cortesEspeciales: cortes,
         cantidadPiezas: n('cantidadPiezas') || 1,
         nivelDificultad: g('nivelBasico')?.checked ? 'basico' : g('nivelMedio')?.checked ? 'medio' : 'alto',
-        requiereInstalacion: g('requiereInstalacion')?.checked || false,
-        distanciaKm: g('distanciaKm')?.value || 0,
+        items: typeof itemsData !== 'undefined' ? itemsData : [],
         costoMateriales: n('costoMateriales'),
         costoManoObra: n('costoManoObra'),
         costoHerrajes: n('costoHerrajes'),

@@ -184,10 +184,6 @@ class CotizacionModel {
       },
 
       especificaciones: {
-        materialPrincipal: datos.materialPrincipal || '',
-        especieMadera: datos.especieMadera || '',
-        acabados: datos.acabados || [],
-        colorTono: datos.colorTono || '',
         medidas: {
           largo: datos.largo || 0,
           ancho: datos.ancho || 0,
@@ -197,8 +193,7 @@ class CotizacionModel {
         cortesEspeciales: datos.cortesEspeciales || [],
         cantidadPiezas: datos.cantidadPiezas || 1,
         nivelDificultad: datos.nivelDificultad || 'basico',
-        requiereInstalacion: datos.requiereInstalacion || false,
-        distanciaKm: datos.distanciaKm || 0
+        items: datos.items || []
       },
 
       costos: {

@@ -39,9 +39,8 @@
           <div class="tab-nav" id="tabNav">
             <button class="tab-btn active" data-tab="cliente" onclick="cambiarTab('cliente')">1. Datos del cliente</button>
             <button class="tab-btn " data-tab="especificaciones" onclick="cambiarTab('especificaciones')">2. Especificaciones del mueble y medidas</button>
-            <button class="tab-btn" data-tab="acabados" onclick="cambiarTab('acabados')">3. Acabado y detalles</button>
-            <button class="tab-btn" data-tab="materiales" onclick="cambiarTab('materiales')">4. Materiales y herrajes</button>
-            <button class="tab-btn" data-tab="mano-obra" onclick="cambiarTab('mano-obra')">5. Mano de obra y margenes de ganancias</button>
+            <button class="tab-btn" data-tab="materiales" onclick="cambiarTab('materiales')">3. Materiales y herrajes</button>
+            <button class="tab-btn" data-tab="mano-obra" onclick="cambiarTab('mano-obra')">4. Mano de obra y margenes de ganancias</button>
           </div>
 
           <!-- TAB 1: Datos del cliente -->
@@ -112,211 +111,22 @@
                 <span class="sec-num">02</span>
                 Especificaciones del Mueble y Medidas
               </div>
-              <div class="field">
-                <label>Tipo de Trabajo</label>
-                <select id="tipoTrabajo" onchange="toggleTipoTrabajoOtro(); actualizarPreview();">
-                  <option value="mueble_medida">Mueble a Medida</option>
-                  <option value="carpinteria_decorativa">Carpinter&iacute;a Decorativa</option>
-                  <option value="carpinteria_estructural">Carpinter&iacute;a Estructural</option>
-                  <option value="remodelacion_completa">Remodelaci&oacute;n Completa</option>
-                  <option value="puertas_closets_cocinas">Puertas / Closets / Cocinas</option>
-                  <option value="restauracion">Restauraci&oacute;n</option>
-                  <option value="otros">Otros</option>
-                </select>
-              </div>
-              <div class="field" id="tipoTrabajoOtroField" style="display:none;">
-                <label>Especifique el tipo de trabajo</label>
-                <input type="text" id="tipoTrabajoOtro" placeholder="Describe el tipo de trabajo" oninput="actualizarPreview()"/>
-              </div>
-              <div class="field">
-                <label>Nombre del Mueble *</label>
-                <input type="text" id="nombreProyecto" placeholder="Ej: Estante flotante 3 niveles" oninput="actualizarPreview()"/>
-              </div>
-              <div class="field">
-                <label>Descripci&oacute;n del Mueble</label>
-                <textarea id="descripcionProyecto" rows="3" placeholder="Descripci&oacute;n breve del mueble" oninput="actualizarPreview()"></textarea>
-              </div>
-              <div class="field">
-                <label>Dimensiones Generales</label>
-                <div class="g3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
-                  <div>
-                    <label style="font-size:11px;color:var(--muted);">Alto (cm)</label>
-                    <input type="number" id="altoGeneral" min="0" step="0.1" placeholder="Alto" oninput="actualizarPreview()"/>
-                  </div>
-                  <div>
-                    <label style="font-size:11px;color:var(--muted);">Ancho (cm)</label>
-                    <input type="number" id="anchoGeneral" min="0" step="0.1" placeholder="Ancho" oninput="actualizarPreview()"/>
-                  </div>
-                  <div>
-                    <label style="font-size:11px;color:var(--muted);">Profundo (cm)</label>
-                    <input type="number" id="profundoGeneral" min="0" step="0.1" placeholder="Prof." oninput="actualizarPreview()"/>
-                  </div>
+              <div class="agregar-item-bar" style="display:flex;gap:8px;margin-bottom:14px;align-items:end;">
+                <div class="field" style="flex:1;margin-bottom:0;">
+                  <label style="font-size:11px;color:var(--muted);margin-bottom:3px;display:block;">Tipo de formulario</label>
+                  <select id="tipoFormularioSelect" class="mueble-input" style="width:100%;" onchange="onTipoFormularioChange()">
+                    <option value="personalizado">Formulario de cero</option>
+                    <option value="catalogo">Catálogo</option>
+                  </select>
                 </div>
+                <button type="button" class="btn btn-primary" onclick="agregarItemTipoSelect()" style="padding:10px 20px;white-space:nowrap;">+ Agregar</button>
               </div>
-              <div class="field">
-                <label>Medidas de Piezas</label>
-                <div class="g2" style="grid-template-columns:repeat(4,1fr);">
-                  <div class="field" style="margin-bottom:0;">
-                    <label>Largo (cm)</label>
-                    <input type="number" id="largo" min="0" step="0.1" oninput="actualizarPreview()"/>
-                  </div>
-                  <div class="field" style="margin-bottom:0;">
-                    <label>Ancho (cm)</label>
-                    <input type="number" id="ancho" min="0" step="0.1" oninput="actualizarPreview()"/>
-                  </div>
-                  <div class="field" style="margin-bottom:0;">
-                    <label>Alto (cm)</label>
-                    <input type="number" id="alto" min="0" step="0.1" oninput="actualizarPreview()"/>
-                  </div>
-                  <div class="field" style="margin-bottom:0;">
-                    <label>Grosor (mm)</label>
-                    <input type="number" id="grosor" min="0" step="0.1" oninput="actualizarPreview()"/>
-                  </div>
-                </div>
-              </div>
-              <div class="field">
-                <label>Cortes Especiales</label>
-                <div style="display:flex;gap:12px;flex-wrap:wrap;">
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="corteEspecial" value="45grados" onchange="actualizarPreview()"/> 45&deg;
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="corteEspecial" value="plantillas" onchange="actualizarPreview()"/> Plantillas
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="corteEspecial" value="curvas" onchange="actualizarPreview()"/> Curvas
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="corteEspecial" value="cnc" onchange="actualizarPreview()"/> CNC
-                  </label>
-                </div>
-              </div>
-              <div class="field">
-                <label>Cantidad de Piezas</label>
-                <input type="number" id="cantidadPiezas" min="1" value="1" oninput="actualizarPreview()"/>
-              </div>
-              <div class="field">
-                <label>Nivel de Dificultad</label>
-                <div style="display:flex;gap:10px;">
-                  <div class="nivel-card activo" id="nivelCardBasico" onclick="seleccionarNivel('basico')">
-                    <input type="radio" name="nivelDificultad" id="nivelBasico" value="basico" checked style="display:none;"/>
-                    <span style="font-size:18px;">&nbsp;</span>
-                    <span style="font-size:12px;font-weight:600;">B&aacute;sico</span>
-                  </div>
-                  <div class="nivel-card" id="nivelCardMedio" onclick="seleccionarNivel('medio')">
-                    <input type="radio" name="nivelDificultad" id="nivelMedio" value="medio" style="display:none;"/>
-                    <span style="font-size:18px;">&nbsp;</span>
-                    <span style="font-size:12px;font-weight:600;">Medio</span>
-                  </div>
-                  <div class="nivel-card" id="nivelCardAlto" onclick="seleccionarNivel('alto')">
-                    <input type="radio" name="nivelDificultad" id="nivelAlto" value="alto" style="display:none;"/>
-                    <span style="font-size:18px;">&nbsp;</span>
-                    <span style="font-size:12px;font-weight:600;">Alto</span>
-                  </div>
-                </div>
-              </div>
-              <div class="field">
-                <label>Ubicaci&oacute;n de Instalaci&oacute;n</label>
-                <div style="display:flex;gap:14px;flex-wrap:wrap;">
-                  <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="radio" name="ubicacionInstalacion" id="ubicacionInterior" value="interior" checked onchange="actualizarPreview()"/> Interior
-                  </label>
-                  <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="radio" name="ubicacionInstalacion" id="ubicacionExterior" value="exterior" onchange="actualizarPreview()"/> Exterior
-                  </label>
-                  <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="radio" name="ubicacionInstalacion" id="ubicacionHumeda" value="area_humeda" onchange="actualizarPreview()"/> &Aacute;rea H&uacute;meda
-                  </label>
-                  <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="radio" name="ubicacionInstalacion" id="ubicacionOtro" value="otro" onchange="actualizarPreview()"/> Otro
-                  </label>
-                </div>
-              </div>
-              <div class="field">
-                <label>Fecha de Entrega Deseada</label>
-                <input type="date" id="fechaEntregaDeseada" oninput="actualizarPreview()"/>
-              </div>
+              <div id="itemsContainer"></div>
+              <div id="itemsResumen" class="items-resumen"></div>
             </div>
           </div>
 
-          <!-- TAB 3: Acabado y detalles -->
-          <div class="tab-content" id="tab-acabados">
-            <div class="section">
-              <div class="section-title">
-                <span class="sec-num">03</span>
-                Acabado y Detalles
-              </div>
-              <div class="field">
-                <label>Material Principal</label>
-                <select id="materialPrincipal" onchange="toggleEspecieMadera(); actualizarPreview();">
-                  <option value="madera_solida">Madera S&oacute;lida</option>
-                  <option value="mdf">MDF</option>
-                  <option value="melamina">Melamina</option>
-                  <option value="madera_recuperada">Madera Recuperada</option>
-                  <option value="mixto">Mixto</option>
-                </select>
-              </div>
-              <div class="field" id="especieMaderaField" style="display:none;">
-                <label>Especie de Madera</label>
-                <input type="text" id="especieMadera" placeholder="Ej: Cedro, Pino, Nogal..." oninput="actualizarPreview()"/>
-              </div>
-              <div class="field">
-                <label>Acabado</label>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="acabado" value="barniz" onchange="actualizarPreview()"/> Barniz
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="acabado" value="laca" onchange="actualizarPreview()"/> Laca
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="acabado" value="sellador" onchange="actualizarPreview()"/> Sellador
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="acabado" value="tintado" onchange="actualizarPreview()"/> Tintado
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="acabado" value="natural" onchange="actualizarPreview()"/> Natural
-                  </label>
-                  <label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--cream);cursor:pointer;">
-                    <input type="checkbox" name="acabado" value="pintura" onchange="actualizarPreview()"/> Pintura
-                  </label>
-                </div>
-              </div>
-              <div class="field">
-                <label>Color / Tono</label>
-                <input type="text" id="colorTono" placeholder="Ej: Nogal oscuro, Blanco hueso..." oninput="actualizarPreview()"/>
-              </div>
-              <div class="field">
-                <label style="display:flex;align-items:center;gap:10px;">
-                  <span>Requiere Instalaci&oacute;n</span>
-                  <label class="toggle-switch" style="position:relative;display:inline-block;width:40px;height:22px;">
-                    <input type="checkbox" id="requiereInstalacion" onchange="toggleInstalacion(); actualizarPreview();" style="opacity:0;width:0;height:0;"/>
-                    <span class="toggle-slider" style="position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:var(--card2);border:1px solid var(--border);border-radius:22px;transition:0.3s;"></span>
-                  </label>
-                </label>
-              </div>
-              <div class="field" id="distanciaKmField" style="display:none;">
-                <label>Distancia (km)</label>
-                <input type="number" id="distanciaKm" min="0" placeholder="Kil&oacute;metros hasta el lugar" oninput="actualizarPreview()"/>
-              </div>
-              <div class="field">
-                <label>Observaciones / Personalizaci&oacute;n</label>
-                <textarea id="observaciones" rows="3" placeholder="Detalles adicionales, personalizaciones, notas para el cliente..." oninput="actualizarPreview()"></textarea>
-              </div>
-              <div class="field">
-                <label>Archivos de referencia</label>
-                <input type="file" id="adjuntosInput" multiple accept="image/*,video/*,.pdf" onchange="handleAdjuntos(this.files)"/>
-              </div>
-              <div class="adjuntos-preview" id="adjuntosPreview" style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;"></div>
-              <div class="field" style="margin-top:12px;">
-                <label>Notas de archivos / planos</label>
-                <textarea id="notasAdjuntos" rows="3" placeholder="Notas sobre los archivos de referencia..." oninput="actualizarPreview()"></textarea>
-              </div>
-            </div>
-          </div>
-
-          <!-- TAB 4: Materiales y herrajes -->
+          <!-- TAB 3: Materiales y herrajes -->
           <div class="tab-content" id="tab-materiales">
             <div class="section">
               <div class="section-title">
@@ -424,15 +234,16 @@
             </div>
             <div style="margin-bottom:12px;font-size:11px;color:var(--muted);" id="previewValidez"></div>
 
+            <div style="margin-bottom:8px;">
+              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Items</div>
+              <div style="font-size:12px;color:var(--cream);" id="previewItemsSummary">&mdash;</div>
+            </div>
+
             <hr style="border:none;border-top:1px solid var(--border);margin:10px 0;"/>
 
             <div style="margin-bottom:8px;">
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Material</div>
               <div style="font-size:13px;color:var(--cream);" id="previewMaterial">&mdash;</div>
-            </div>
-            <div style="margin-bottom:8px;">
-              <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Acabado</div>
-              <div style="font-size:13px;color:var(--cream);" id="previewAcabado">&mdash;</div>
             </div>
             <div style="margin-bottom:12px;">
               <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;">Medidas</div>
@@ -505,6 +316,7 @@
 <script src="../modules/cotizaciones/Cotizacion.model.js"></script>
 <script src="../modules/cotizaciones/Cotizacion.controller.js"></script>
 <script src="../modules/cotizaciones/Cotizacion.view.js"></script>
+<script src="../modules/cotizaciones/cotizacion.page.js"></script>
 <script>
 renderSidebar('cotizar'); 
 </script>
@@ -525,16 +337,6 @@ function seleccionarNivel(nivel) {
 function toggleTipoTrabajoOtro() {
   var sel = document.getElementById('tipoTrabajo').value;
   document.getElementById('tipoTrabajoOtroField').style.display = sel === 'otros' ? 'block' : 'none';
-}
-
-function toggleEspecieMadera() {
-  var sel = document.getElementById('materialPrincipal').value;
-  document.getElementById('especieMaderaField').style.display = sel === 'madera_solida' ? 'block' : 'none';
-}
-
-function toggleInstalacion() {
-  var checked = document.getElementById('requiereInstalacion').checked;
-  document.getElementById('distanciaKmField').style.display = checked ? 'block' : 'none';
 }
 
 function actualizarMargenLabel() {
@@ -612,21 +414,6 @@ function enviarAlCliente() {
   }
 }
 
-function handleAdjuntos(files) {
-  var preview = document.getElementById('adjuntosPreview');
-  preview.innerHTML = '';
-  Array.from(files).forEach(function(file) {
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      var div = document.createElement('div');
-      div.style.cssText = 'width:80px;height:80px;border-radius:8px;overflow:hidden;border:1px solid var(--border);flex-shrink:0;';
-      div.innerHTML = '<img src="' + e.target.result + '" style="width:100%;height:100%;object-fit:cover;"/>';
-      preview.appendChild(div);
-    };
-    reader.readAsDataURL(file);
-  });
-}
-
 function limpiarFormulario() {
   if (!confirm('Limpiar el formulario? Se perder&aacute;n los datos ingresados.')) return;
   var inputs = document.querySelectorAll('.field input, .field select, .field textarea');
@@ -645,12 +432,9 @@ function limpiarFormulario() {
   document.getElementById('nivelCardBasico').classList.add('activo');
   document.getElementById('validezCotizacion').value = '15';
   document.getElementById('tipoTrabajoOtroField').style.display = 'none';
-  document.getElementById('especieMaderaField').style.display = 'none';
-  document.getElementById('distanciaKmField').style.display = 'none';
   var numDisplay = document.getElementById('numeroCotizacionDisplay');
   if (numDisplay) numDisplay.value = '';
   document.getElementById('fechaCotizacion').value = new Date().toISOString().split('T')[0];
-  document.getElementById('adjuntosPreview').innerHTML = '';
   document.getElementById('precioSugerido').value = '';
   cambiarTab('cliente');
   actualizarMargenLabel();
@@ -721,17 +505,12 @@ function cargarCotizacionExistente(id) {
   }
   if (p.fechaEntregaDeseada) document.getElementById('fechaEntregaDeseada').value = p.fechaEntregaDeseada;
 
-  if (e.materialPrincipal) { document.getElementById('materialPrincipal').value = e.materialPrincipal; toggleEspecieMadera(); }
-  if (e.especieMadera) document.getElementById('especieMadera').value = e.especieMadera;
-  if (e.colorTono) document.getElementById('colorTono').value = e.colorTono;
   if (med.largo) document.getElementById('largo').value = med.largo;
   if (med.ancho) document.getElementById('ancho').value = med.ancho;
   if (med.alto) document.getElementById('alto').value = med.alto;
   if (med.grosor) document.getElementById('grosor').value = med.grosor;
   if (e.cantidadPiezas) document.getElementById('cantidadPiezas').value = e.cantidadPiezas;
   if (e.nivelDificultad) seleccionarNivel(e.nivelDificultad);
-  if (e.requiereInstalacion) { document.getElementById('requiereInstalacion').checked = true; toggleInstalacion(); }
-  if (e.distanciaKm) { document.getElementById('distanciaKm').value = e.distanciaKm; }
 
   if (cs.materiales) document.getElementById('costoMateriales').value = cs.materiales;
   if (cs.manoObra) document.getElementById('costoManoObra').value = cs.manoObra;
