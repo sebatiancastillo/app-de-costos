@@ -598,9 +598,10 @@
       }
 
       const cs = d.costos || {};
-      const suma = (cs.materiales || 0) + (cs.manoObra || 0) + (cs.herrajes || 0) + (cs.herramientas || 0) + (cs.transporte || 0) + (cs.subcontratos || 0);
+      var matTotal = typeof cs.materiales === 'object' ? (cs.materiales.total || 0) : (cs.materiales || 0);
+      const suma = matTotal + (cs.manoObra || 0) + (cs.herrajes || 0) + (cs.herramientas || 0) + (cs.transporte || 0) + (cs.subcontratos || 0);
 
-      document.getElementById('previewCostoMateriales').textContent = fmt(cs.materiales || 0);
+      document.getElementById('previewCostoMateriales').textContent = fmt(matTotal);
       const herrajesEl = document.getElementById('previewCostoHerrajes');
       if (herrajesEl) herrajesEl.textContent = fmt(cs.herrajes || 0);
       document.getElementById('previewCostoManoObra').textContent = fmt(cs.manoObra || 0);
@@ -708,7 +709,8 @@
         cantidadPiezas: n('cantidadPiezas') || 1,
         nivelDificultad: g('nivelBasico')?.checked ? 'basico' : g('nivelMedio')?.checked ? 'medio' : 'alto',
         items: typeof itemsData !== 'undefined' ? itemsData : [],
-        costoMateriales: n('costoMateriales'),
+        materialesItems: typeof listaMateriales !== 'undefined' ? listaMateriales.map(function(m) { return { articulo: m.articulo, color: m.color, proveedor: m.proveedor, cantidad: m.cantidad, unidad: m.unidad, precioUnitario: m.precioUnitario, precioFinal: m.precioFinal, observaciones: m.observaciones }; }) : [],
+        materialesTotal: typeof calcularTotalMateriales === 'function' ? calcularTotalMateriales() : 0,
         costoManoObra: n('costoManoObra'),
         costoHerrajes: n('costoHerrajes'),
         costoHerramientas: n('costoHerramientas'),

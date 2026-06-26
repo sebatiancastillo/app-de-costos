@@ -129,31 +129,84 @@
           <!-- TAB 3: Materiales y herrajes -->
           <div class="tab-content" id="tab-materiales">
             <div class="section">
-              <div class="section-title">
-                <span class="sec-num">04</span>
-                Materiales y Herrajes
-                <span class="tag tag-amber" style="margin-left:auto;font-size:10px;">Solo admin</span>
+              <div class="mat-form-header">
+                <div>
+                  <div class="section-title" style="margin-bottom:0;">
+                    <span class="sec-num">04</span>
+                    Materiales y Herrajes
+                  </div>
+                </div>
+                <button type="button" class="btn btn-primary" onclick="agregarMaterial()" style="padding:8px 18px;font-size:13px;white-space:nowrap;">+ Agregar material</button>
               </div>
-              <div class="g2">
-                <div class="field">
-                  <label>Costo Materiales</label>
-                  <input type="number" id="costoMateriales" min="0" oninput="actualizarPreview(); calcularPrecioSugerido();"/>
+
+              <div class="mat-form-grid" id="materialForm">
+                <div class="g3">
+                  <div class="field">
+                    <label>Art&iacute;culo *</label>
+                    <input type="text" id="matArticulo" class="mueble-input" placeholder="Marca, modelo, descripci&oacute;n..." oninput="quitarError(this)"/>
+                  </div>
+                  <div class="field">
+                    <label>Color *</label>
+                    <input type="text" id="matColor" class="mueble-input" placeholder="Ej: Blanco hueso, Natural..." oninput="quitarError(this)"/>
+                  </div>
+                  <div class="field">
+                    <label>Proveedor *</label>
+                    <input type="text" id="matProveedor" class="mueble-input" placeholder="Nombre del proveedor" oninput="quitarError(this)"/>
+                  </div>
                 </div>
-                <div class="field">
-                  <label>Costo Herrajes</label>
-                  <input type="number" id="costoHerrajes" min="0" oninput="actualizarPreview(); calcularPrecioSugerido();"/>
+
+                <div class="g3">
+                  <div class="field">
+                    <label>Cantidad *</label>
+                    <input type="number" id="matCantidad" class="mueble-input" min="0.01" step="0.01" placeholder="0.00" oninput="quitarError(this);calcularPrecioFinalMaterial()"/>
+                  </div>
+                  <div class="field">
+                    <label>Unidad de medida *</label>
+                    <select id="matUnidad" class="mueble-input" onchange="quitarError(this)">
+                      <option value="unidad">Unidad</option>
+                      <option value="m2">m&sup2;</option>
+                      <option value="ml">ml</option>
+                      <option value="m3">m&sup3;</option>
+                      <option value="kg">kg</option>
+                      <option value="litro">Litro</option>
+                      <option value="tablero">Tablero</option>
+                      <option value="vara">Vara</option>
+                      <option value="tabla">Tabla</option>
+                      <option value="rollo">Rollo</option>
+                      <option value="hoja">Hoja</option>
+                      <option value="par">Par</option>
+                      <option value="juego">Juego</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Precio unitario *</label>
+                    <input type="number" id="matPrecioUnitario" class="mueble-input" min="0" step="100" placeholder="$ 0" oninput="quitarError(this);calcularPrecioFinalMaterial()"/>
+                  </div>
                 </div>
+
                 <div class="field">
-                  <label>Costo Herramientas</label>
-                  <input type="number" id="costoHerramientas" min="0" oninput="actualizarPreview(); calcularPrecioSugerido();"/>
+                  <label>Observaciones</label>
+                  <textarea id="matObservaciones" class="mueble-input" rows="2" placeholder="Notas adicionales sobre este material..."></textarea>
                 </div>
+
                 <div class="field">
-                  <label>Costo Subcontratos</label>
-                  <input type="number" id="costoSubcontratos" min="0" oninput="actualizarPreview(); calcularPrecioSugerido();"/>
+                  <label>Precio final</label>
+                  <div class="mat-precio-final" id="matPrecioFinalDisplay">$ 0</div>
                 </div>
-                <div class="field">
-                  <label>Tiempo Estimado (d&iacute;as)</label>
-                  <input type="number" id="tiempoEstimadoDias" min="0" oninput="actualizarPreview()"/>
+              </div>
+
+              <div class="mat-lista" id="materialLista">
+                <div class="mat-lista-titulo">
+                  <span>Materiales agregados</span>
+                  <span class="mat-lista-count" id="matListaCount">0 &iacute;tems</span>
+                </div>
+                <div id="materialListaItems">
+                  <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">A&uacute;n no hay materiales. Agrega el primero arriba.</div>
+                </div>
+                <div class="mat-lista-total">
+                  <span>Total materiales</span>
+                  <span id="matTotalDisplay">$ 0</span>
                 </div>
               </div>
             </div>
@@ -346,7 +399,7 @@ function actualizarMargenLabel() {
 }
 
 function calcularPrecioSugerido() {
-  var mats = parseFloat(document.getElementById('costoMateriales').value) || 0;
+  var mats = typeof calcularTotalMateriales === 'function' ? calcularTotalMateriales() : 0;
   var herrajes = parseFloat(document.getElementById('costoHerrajes').value) || 0;
   var mo = parseFloat(document.getElementById('costoManoObra').value) || 0;
   var herr = parseFloat(document.getElementById('costoHerramientas').value) || 0;
@@ -367,6 +420,114 @@ function calcularPrecioSugerido() {
   document.getElementById('previewCostoSubcontratos').textContent = formatCOP(sub);
   var costoRow = document.getElementById('costoTransporteRow');
   if (costoRow) costoRow.style.display = transp > 0 ? 'flex' : 'none';
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+var listaMateriales = [];
+
+function agregarMaterial() {
+  var art = document.getElementById('matArticulo').value.trim();
+  var color = document.getElementById('matColor').value.trim();
+  var prov = document.getElementById('matProveedor').value.trim();
+  var cant = parseFloat(document.getElementById('matCantidad').value) || 0;
+  var unidad = document.getElementById('matUnidad').value;
+  var pu = parseFloat(document.getElementById('matPrecioUnitario').value) || 0;
+  var obs = document.getElementById('matObservaciones').value.trim();
+
+  var ok = true;
+  if (!art) { document.getElementById('matArticulo').classList.add('campo-error'); ok = false; }
+  if (!color) { document.getElementById('matColor').classList.add('campo-error'); ok = false; }
+  if (!prov) { document.getElementById('matProveedor').classList.add('campo-error'); ok = false; }
+  if (cant <= 0) { document.getElementById('matCantidad').classList.add('campo-error'); ok = false; }
+  if (pu <= 0) { document.getElementById('matPrecioUnitario').classList.add('campo-error'); ok = false; }
+
+  if (!ok) { mostrarToast('Completa los campos obligatorios'); return; }
+
+  listaMateriales.push({
+    articulo: art,
+    color: color,
+    proveedor: prov,
+    cantidad: cant,
+    unidad: unidad,
+    precioUnitario: pu,
+    precioFinal: cant * pu,
+    observaciones: obs
+  });
+
+  document.getElementById('matArticulo').value = '';
+  document.getElementById('matColor').value = '';
+  document.getElementById('matCantidad').value = '';
+  document.getElementById('matPrecioUnitario').value = '';
+  document.getElementById('matObservaciones').value = '';
+  calcularPrecioFinalMaterial();
+
+  renderListaMateriales();
+}
+
+function eliminarMaterial(index) {
+  mostrarConfirm('Eliminar este material de la lista?', function() {
+    listaMateriales.splice(index, 1);
+    renderListaMateriales();
+  });
+}
+
+function calcularPrecioFinalMaterial() {
+  var cant = parseFloat(document.getElementById('matCantidad').value) || 0;
+  var pu = parseFloat(document.getElementById('matPrecioUnitario').value) || 0;
+  document.getElementById('matPrecioFinalDisplay').textContent = '$ ' + (cant * pu).toLocaleString('es-CO');
+}
+
+function quitarError(el) {
+  el.classList.remove('campo-error');
+}
+
+function renderListaMateriales() {
+  var el = document.getElementById('materialListaItems');
+  var countEl = document.getElementById('matListaCount');
+  var totalEl = document.getElementById('matTotalDisplay');
+  if (!el) return;
+
+  countEl.textContent = listaMateriales.length + ' ítem' + (listaMateriales.length !== 1 ? 's' : '');
+
+  if (listaMateriales.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Aún no hay materiales. Agrega el primero arriba.</div>';
+    totalEl.textContent = '$ 0';
+    calcularPrecioSugerido();
+    return;
+  }
+
+  var html = '';
+  var total = 0;
+  for (var i = 0; i < listaMateriales.length; i++) {
+    var m = listaMateriales[i];
+    total += m.precioFinal;
+    html += '<div class="mat-item">';
+    html += '<div class="mat-item-encabezado">';
+    html += '<span class="mat-item-num">#' + (i + 1) + '</span>';
+    html += '<span class="mat-item-nombre">' + esc(m.articulo) + '</span>';
+    html += '<button type="button" class="mat-item-del" onclick="eliminarMaterial(' + i + ')" title="Eliminar material">&times;</button>';
+    html += '</div>';
+    html += '<div class="mat-item-meta">' + esc(m.color) + ' &middot; ' + esc(m.proveedor) + '</div>';
+    html += '<div class="mat-item-calculo">' + m.cantidad + ' ' + m.unidad + ' &times; $ ' + m.precioUnitario.toLocaleString('es-CO') + ' = <strong>$ ' + m.precioFinal.toLocaleString('es-CO') + '</strong></div>';
+    if (m.observaciones) {
+      html += '<div class="mat-item-obs">' + esc(m.observaciones) + '</div>';
+    }
+    html += '</div>';
+  }
+  el.innerHTML = html;
+  totalEl.textContent = '$ ' + total.toLocaleString('es-CO');
+  calcularPrecioSugerido();
+}
+
+function calcularTotalMateriales() {
+  var total = 0;
+  for (var i = 0; i < listaMateriales.length; i++) {
+    total += listaMateriales[i].precioFinal;
+  }
+  return total;
 }
 
 function actualizarPreview() {
@@ -436,10 +597,17 @@ function limpiarFormulario() {
   if (numDisplay) numDisplay.value = '';
   document.getElementById('fechaCotizacion').value = new Date().toISOString().split('T')[0];
   document.getElementById('precioSugerido').value = '';
+  listaMateriales = [];
+  renderListaMateriales();
+  document.getElementById('matPrecioFinalDisplay').textContent = '$ 0';
   cambiarTab('cliente');
+  if (cs.materiales && cs.materiales.items && cs.materiales.items.length > 0) {
+    listaMateriales = JSON.parse(JSON.stringify(cs.materiales.items));
+    renderListaMateriales();
+  }
   actualizarMargenLabel();
   actualizarPreview();
-  mostrarToast('Formulario limpiado');
+  mostrarToast('Editando cotizaci&oacute;n');
 }
 
 function cambiarTab(tabId) {
@@ -550,6 +718,7 @@ function cargarCotizacionExistente(id) {
       } catch(e) {}
     }
   }
+  renderListaMateriales();
   renderSidebar('cotizar');
 })();
 </script>
