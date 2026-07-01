@@ -29,8 +29,8 @@ const ROUTES = {
     id: 'cotizaciones',
     label: 'Cotizaciones',
     icon: '📋',
-    root: 'views/Cotizacion_List.html',
-    nested: 'Cotizacion_List.html'
+    root: 'views/dashboard.html',
+    nested: 'dashboard.html'
   },
   
   COTIZACION_EN_PROCESO: {

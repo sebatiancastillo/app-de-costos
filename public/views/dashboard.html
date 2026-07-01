@@ -22,6 +22,9 @@
         <button class="btn btn-primary" onclick="navegarA('cotizar.html')">
           ➕ Nueva Cotización
         </button>
+        <button class="btn btn-ghost" onclick="CotizacionController.migrarDesdeLegacy()" style="font-size:13px;">
+          🔄 Migrar datos
+        </button>
         <button class="btn btn-secondary" onclick="descargarBackup()">
           💾 Respaldar
         </button>
@@ -215,12 +218,17 @@
     </div>
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <!-- SCRIPTS -->
   <script src="../shared/storage.js"></script>
+  <script src="../shared/calculos.js"></script>
   <script src="../modules/cotizaciones/Cotizacion.model.js"></script>
   <script src="../modules/cotizaciones/Cotizacion.controller.js"></script>
   <script src="../modules/cotizaciones/DashboardView.js"></script>
   <script src="../shared/utils.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="../shared/pdf.js"></script>
   
   <script>
     // Inicialización
@@ -316,7 +324,9 @@
               <div class="actions">
                 <button class="btn-icon" onclick="verDetalles(${q.id})" title="Ver">👁️</button>
                 <button class="btn-icon" onclick="editarCotizacion(${q.id})" title="Editar">✏️</button>
+                <button class="btn-icon" onclick="duplicarCotizacion(${q.id})" title="Duplicar">📋</button>
                 <button class="btn-icon" onclick="cambiarEstado(${q.id})" title="Estado">↔️</button>
+                <button class="btn-icon" onclick="exportarPDF(${q.id})" title="PDF">📄</button>
                 <button class="btn-icon" onclick="eliminarCotizacion(${q.id})" title="Eliminar">🗑️</button>
               </div>
             </td>
@@ -455,7 +465,7 @@
       const estadosPermitidos = FLUJO_ESTADOS[q.estado] || [];
       
       if (estadosPermitidos.length === 0) {
-        alert('Esta cotización no puede cambiar de estado.');
+        mostrarToast('⚠️ Esta cotización no puede cambiar de estado');
         return;
       }
 
@@ -476,25 +486,31 @@
       const resultado = CotizacionController.cambiarEstado(id, nuevoEstado);
       
       if (resultado.success) {
-        alert(`Estado actualizado a ${ESTADOS[nuevoEstado?.toUpperCase()].label}`);
+        mostrarToast(`✅ Estado actualizado a ${ESTADOS[nuevoEstado?.toUpperCase()].label}`);
         document.getElementById('modalCambiarEstado').style.display = 'none';
         cargarDatos();
       } else {
-        alert(`Error: ${resultado.error}`);
+        mostrarToast('❌ Error: ' + resultado.error);
       }
     }
 
     function eliminarCotizacion(id) {
-      if (!confirm('¿Seguro que deseas eliminar esta cotización? Esta acción no se puede deshacer.')) {
-        return;
+      if (typeof mostrarConfirm === 'function') {
+        mostrarConfirm('¿Eliminar esta cotización? Esta acción no se puede deshacer.', function() {
+          _eliminar(id);
+        });
+      } else {
+        _eliminar(id);
       }
+    }
 
+    function _eliminar(id) {
       const resultado = CotizacionController.eliminar(id);
       if (resultado.success) {
-        alert('Cotización eliminada');
+        mostrarToast('🗑️ Cotización eliminada');
         cargarDatos();
       } else {
-        alert(`Error: ${resultado.error}`);
+        mostrarToast('❌ Error: ' + resultado.error);
       }
     }
 
@@ -556,11 +572,37 @@
         minimumFractionDigits: 0
       }).format(monto);
     }
+
+    function mostrarToast(msg) {
+      var el = document.getElementById('toast');
+      if (!el) return;
+      el.innerHTML = msg;
+      el.classList.add('show');
+      if (el._timer) clearTimeout(el._timer);
+      el._timer = setTimeout(function() { el.classList.remove('show'); }, 2800);
+    }
+
+    function duplicarCotizacion(id) {
+      var result = CotizacionController.duplicar(id);
+      if (result.success) {
+        mostrarToast('✅ Cotizaci\u00f3n duplicada');
+        cargarDatos();
+      } else {
+        mostrarToast('❌ ' + result.error);
+      }
+    }
+
+    function exportarPDF(id) {
+      var c = CotizacionController.obtenerPorId(id);
+      if (!c) { mostrarToast('❌ Cotizaci\u00f3n no encontrada'); return; }
+      PDFGenerator.generarCotizacion(c);
+      mostrarToast('📄 Generando PDF...');
+    }
   </script>
 </div><!-- /content -->
 <script src="../config/routes.js"></script>
 <script src="../components/navbar.js"></script>
-<script>renderSidebar('dashboard');</script>
+<script>renderSidebar('cotizaciones');</script>
 </main>
 </div>
 </body>

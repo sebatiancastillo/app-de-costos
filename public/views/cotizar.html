@@ -558,7 +558,7 @@ function guardarCotizacion(estado) {
   var resultado = CotizacionController.guardar(datos, estado || 'borrador');
   if (resultado.success) {
     mostrarToast('Cotizaci&oacute;n guardada como ' + (estado || 'borrador'));
-    setTimeout(function() { window.location.href = 'Cotizacion_List.html'; }, 1500);
+    setTimeout(function() { window.location.href = 'dashboard.html'; }, 1500);
   } else {
     var msgs = resultado.errores ? resultado.errores.join(', ') : (resultado.error || 'Error al guardar');
     mostrarToast('Error: ' + msgs);

@@ -373,7 +373,7 @@
       const result = CotizacionController.actualizar(editandoId, datos);
       if (result.success) {
         mostrarToast('✅ Cotización actualizada');
-        setTimeout(() => { window.location.href = 'Cotizacion_List.html'; }, 1500);
+        setTimeout(() => { window.location.href = 'dashboard.html'; }, 1500);
       } else {
         mostrarToast('❌ ' + (result.errores?.join(', ') || result.error));
       }
