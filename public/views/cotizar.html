@@ -41,6 +41,7 @@
             <button class="tab-btn " data-tab="especificaciones" onclick="cambiarTab('especificaciones')">2. Especificaciones del mueble y medidas</button>
             <button class="tab-btn" data-tab="materiales" onclick="cambiarTab('materiales')">3. Materiales y herrajes</button>
             <button class="tab-btn" data-tab="mano-obra" onclick="cambiarTab('mano-obra')">4. Mano de obra y margenes de ganancias</button>
+            <button class="tab-btn" data-tab="resumen" onclick="cambiarTab('resumen');renderResumen()">5. Resumen</button>
           </div>
 
           <!-- TAB 1: Datos del cliente -->
@@ -325,6 +326,17 @@
                   <option value="90">90 d&iacute;as</option>
                 </select>
               </div>
+            </div>
+          </div>
+
+          <!-- TAB 5: Resumen -->
+          <div class="tab-content" id="tab-resumen">
+            <div class="section">
+              <div class="section-title">
+                <span class="sec-num">05</span>
+                Resumen de la cotizaci&oacute;n
+              </div>
+              <div id="resumenConteiner"></div>
             </div>
           </div>
 
@@ -754,6 +766,142 @@ function enviarAlCliente() {
     guardarCotizacion('enviada');
   }
 }
+
+function renderResumen() {
+  var h = '<div class="resumen-grid">';
+
+  /* ── 1. Cliente ── */
+  h += '<div class="resumen-block"><div class="resumen-block-titulo">Datos del cliente</div><div class="resumen-block-body">';
+  var cli = document.getElementById('datosCliente').value;
+  var cont = document.getElementById('contactoCliente').value;
+  var tel = document.getElementById('telefonoCliente').value;
+  var email = document.getElementById('emailCliente').value;
+  var dir = document.getElementById('direccion').value;
+  if (cli || cont || tel || email || dir) {
+    h += '<table class="resumen-tabla">';
+    if (cli) h += '<tr><td>Cliente</td><td>' + esc(cli) + '</td></tr>';
+    if (cont) h += '<tr><td>Contacto</td><td>' + esc(cont) + '</td></tr>';
+    if (tel) h += '<tr><td>Tel&eacute;fono</td><td>' + esc(tel) + '</td></tr>';
+    if (email) h += '<tr><td>Email</td><td>' + esc(email) + '</td></tr>';
+    if (dir) h += '<tr><td>Direcci&oacute;n</td><td>' + esc(dir) + '</td></tr>';
+    h += '</table>';
+  } else { h += '<div class="resumen-vacio">Sin datos</div>'; }
+  h += '</div></div>';
+
+  /* ── 2. Especificaciones / Items ── */
+  h += '<div class="resumen-block"><div class="resumen-block-titulo">Especificaciones del mueble y medidas</div><div class="resumen-block-body">';
+  var tipo = document.getElementById('tipoTrabajo');
+  var tipoVal = tipo ? tipo.options[tipo.selectedIndex]?.text || '' : '';
+  var proy = document.getElementById('nombreProyecto').value;
+  var desc = document.getElementById('descripcionProyecto').value;
+  if (tipoVal || proy || desc) {
+    h += '<table class="resumen-tabla">';
+    if (tipoVal) h += '<tr><td>Tipo</td><td>' + esc(tipoVal) + '</td></tr>';
+    if (proy) h += '<tr><td>Proyecto</td><td>' + esc(proy) + '</td></tr>';
+    if (desc) h += '<tr><td>Descripci&oacute;n</td><td>' + esc(desc) + '</td></tr>';
+    h += '</table>';
+  } else { h += '<div class="resumen-vacio">Sin datos</div>'; }
+
+  /* Medidas generales */
+  var alto = document.getElementById('altoGeneral');
+  var ancho = document.getElementById('anchoGeneral');
+  var prof = document.getElementById('profundoGeneral');
+  if ((alto && alto.value) || (ancho && ancho.value) || (prof && prof.value)) {
+    h += '<div class="resumen-subtitulo">Medidas generales</div><table class="resumen-tabla">';
+    if (alto && alto.value) h += '<tr><td>Alto</td><td>' + esc(alto.value) + ' mm</td></tr>';
+    if (ancho && ancho.value) h += '<tr><td>Ancho</td><td>' + esc(ancho.value) + ' mm</td></tr>';
+    if (prof && prof.value) h += '<tr><td>Profundo</td><td>' + esc(prof.value) + ' mm</td></tr>';
+    h += '</table>';
+  }
+
+  /* Items */
+  if (typeof itemsData !== 'undefined' && itemsData.length > 0) {
+    h += '<div class="resumen-subtitulo">Items (' + itemsData.length + ')</div>';
+    itemsData.forEach(function(item, i) {
+      var tipoItem = item.tipo === 'catalogo' ? 'Cat&aacute;logo' : 'Personalizado';
+      h += '<div class="resumen-item-card"><div class="resumen-item-num">#' + (i + 1) + ' <span class="resumen-item-tipo">' + tipoItem + '</span></div>';
+      if (item.tipo === 'catalogo') {
+        var catSel = item.catalogoId || '';
+        h += '<div>Cat&aacute;logo: ' + esc(catSel) + '</div>';
+        if (item.catalogoMedidas) h += '<div>Medidas: ' + esc(item.catalogoMedidas) + '</div>';
+      } else {
+        if (item.materialPrincipal) h += '<div>Material: ' + esc(item.materialPrincipal) + '</div>';
+        if (item.acabado) h += '<div>Acabado: ' + esc(item.acabado) + '</div>';
+        if (item.colorTono) h += '<div>Color/Tono: ' + esc(item.colorTono) + '</div>';
+        if (item.instalacion) h += '<div>Incluye instalaci&oacute;n</div>';
+      }
+      if (item.cantidad && item.cantidad > 1) h += '<div>Cantidad: ' + item.cantidad + '</div>';
+      if (item.largo || item.ancho || item.alto || item.grosor) {
+        h += '<div>Medidas: ' + [item.largo, item.ancho, item.alto, item.grosor].filter(Boolean).join(' × ') + ' mm</div>';
+      }
+      h += '</div>';
+    });
+  }
+  h += '</div></div>';
+
+  /* ── 3. Materiales ── */
+  h += '<div class="resumen-block"><div class="resumen-block-titulo">Materiales y herrajes</div><div class="resumen-block-body">';
+  if (typeof listaMateriales !== 'undefined' && listaMateriales.length > 0) {
+    h += '<table class="resumen-tabla"><thead><tr><th>#</th><th>Art&iacute;culo</th><th>Color</th><th>Proveedor</th><th>Cant.</th><th>P.unit</th><th>Total</th></tr></thead><tbody>';
+    var matTotal = 0;
+    listaMateriales.forEach(function(m, i) {
+      var pf = parseFloat(m.precioFinal) || 0;
+      matTotal += pf;
+      h += '<tr><td>' + (i + 1) + '</td><td>' + esc(m.articulo) + '</td><td>' + esc(m.color || '') + '</td><td>' + esc(m.proveedor || '') + '</td><td>' + (m.cantidad || '') + ' ' + esc(m.unidad || '') + '</td><td>$' + fmtNum(parseFloat(m.precioUnitario) || 0) + '</td><td>$' + fmtNum(pf) + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    h += '<div class="resumen-total-line">Total materiales: <strong>$' + fmtNum(matTotal) + '</strong></div>';
+  } else {
+    h += '<div class="resumen-vacio">Sin materiales registrados</div>';
+  }
+  h += '</div></div>';
+
+  /* ── 4. Mano de obra ── */
+  h += '<div class="resumen-block"><div class="resumen-block-titulo">Mano de obra</div><div class="resumen-block-body">';
+  if (typeof listaTareas !== 'undefined' && listaTareas.length > 0) {
+    h += '<table class="resumen-tabla"><thead><tr><th>#</th><th>Tarea</th><th>Colaborador</th><th>Horas</th><th>Tarifa/h</th><th>Subtotal</th></tr></thead><tbody>';
+    var tarTotal = 0;
+    var tarHorasTotal = 0;
+    listaTareas.forEach(function(t, i) {
+      var st = parseFloat(t.subtotal) || 0;
+      tarTotal += st;
+      tarHorasTotal += parseFloat(t.horas) || 0;
+      h += '<tr><td>' + (i + 1) + '</td><td>' + esc(t.nombre) + '</td><td>' + esc(t.colaborador || '') + '</td><td>' + (t.horas || '0') + 'h</td><td>$' + fmtNum(parseFloat(t.tarifa) || 0) + '</td><td>$' + fmtNum(st) + '</td></tr>';
+    });
+    h += '</tbody></table>';
+    h += '<div class="resumen-total-line">Total horas: ' + tarHorasTotal + 'h &mdash; Total mano de obra: <strong>$' + fmtNum(tarTotal) + '</strong></div>';
+  } else {
+    h += '<div class="resumen-vacio">Sin tareas registradas</div>';
+  }
+  h += '</div></div>';
+
+  /* ── 5. Costos totales ── */
+  h += '<div class="resumen-block resumen-block-total">';
+  h += '<div class="resumen-block-titulo">Costos totales</div><div class="resumen-block-body">';
+  var matTotal2 = typeof calcularTotalMateriales === 'function' ? calcularTotalMateriales() : 0;
+  var tarTotal2 = typeof calcularTotalManoObra === 'function' ? calcularTotalManoObra() : 0;
+  var transp = parseFloat(document.getElementById('costoTransporte')?.value) || 0;
+  var subcontratos = 0; // no hay campo
+  var herrajes = 0; // no hay campo
+  var herramientas = 0; // no hay campo
+  var sumaCostos = matTotal2 + tarTotal2 + transp + subcontratos + herrajes + herramientas;
+  var margen = parseFloat(document.getElementById('margenGanancia')?.value) || 0;
+  var precioFinal = sumaCostos * (1 + margen / 100);
+  h += '<table class="resumen-tabla">';
+  h += '<tr><td>Materiales</td><td style="text-align:right;">$' + fmtNum(matTotal2) + '</td></tr>';
+  h += '<tr><td>Mano de obra</td><td style="text-align:right;">$' + fmtNum(tarTotal2) + '</td></tr>';
+  h += '<tr><td>Transporte</td><td style="text-align:right;">$' + fmtNum(transp) + '</td></tr>';
+  h += '<tr style="border-top:1px solid var(--amber-dim);font-weight:600;"><td>Subtotal</td><td style="text-align:right;">$' + fmtNum(sumaCostos) + '</td></tr>';
+  h += '<tr><td>Margen (' + margen + '%)</td><td style="text-align:right;">$' + fmtNum(precioFinal - sumaCostos) + '</td></tr>';
+  h += '<tr style="font-size:17px;color:var(--amber);font-weight:700;"><td>Precio sugerido</td><td style="text-align:right;">$' + fmtNum(precioFinal) + '</td></tr>';
+  h += '</table>';
+  h += '</div></div>';
+
+  h += '</div>';
+  document.getElementById('resumenConteiner').innerHTML = h;
+}
+
+function fmtNum(n) { return n.toLocaleString('es-CL'); }
 
 function limpiarFormulario() {
   if (!confirm('Limpiar el formulario? Se perder&aacute;n los datos ingresados.')) return;
