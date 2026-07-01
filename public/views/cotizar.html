@@ -212,29 +212,103 @@
             </div>
           </div>
 
-          <!-- TAB 5: Mano de obra -->
+          <!-- TAB 4: Mano de obra -->
           <div class="tab-content" id="tab-mano-obra">
             <div class="section">
-              <div class="section-title">
-                <span class="sec-num">05</span>
-                Mano de Obra y Margenes de Ganancias
-                <span class="tag tag-amber" style="margin-left:auto;font-size:10px;">Solo admin</span>
-              </div>
-              <div class="g2">
-                <div class="field">
-                  <label>Costo Mano de Obra</label>
-                  <input type="number" id="costoManoObra" min="0" oninput="actualizarPreview(); calcularPrecioSugerido();"/>
+              <div class="mat-form-header">
+                <div>
+                  <div class="section-title" style="margin-bottom:0;">
+                    <span class="sec-num">05</span>
+                    Mano de Obra
+                  </div>
                 </div>
+                <button type="button" class="btn btn-primary" onclick="agregarTarea()" style="padding:8px 18px;font-size:13px;white-space:nowrap;">+ Agregar tarea</button>
+              </div>
+
+              <div class="mat-form-grid" id="tareaForm">
+                <div class="field">
+                  <label>Nombre de la tarea *</label>
+                  <input type="text" id="tarNombre" class="mueble-input" placeholder="Ej: Corte de tableros, Ensamble, Lijado..." oninput="quitarError(this)"/>
+                </div>
+                <div class="g3">
+                  <div class="field">
+                    <label>Colaborador *</label>
+                    <select id="tarColaborador" class="mueble-input" onchange="quitarError(this)">
+                      <option value="">Seleccionar...</option>
+                      <option value="juan_perez">Juan P&eacute;rez</option>
+                      <option value="maria_lopez">Mar&iacute;a L&oacute;pez</option>
+                      <option value="carlos_mora">Carlos Mora</option>
+                      <option value="andres_ruiz">Andr&eacute;s Ruiz</option>
+                      <option value="subcontrato">Subcontrato</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Horas estimadas *</label>
+                    <input type="number" id="tarHoras" class="mueble-input" min="0.5" step="0.5" placeholder="0" oninput="quitarError(this);calcularSubtotalTarea()"/>
+                  </div>
+                  <div class="field">
+                    <label>Tarifa por hora *</label>
+                    <input type="number" id="tarTarifa" class="mueble-input" min="0" step="1000" placeholder="$ 0" oninput="quitarError(this);calcularSubtotalTarea()"/>
+                  </div>
+                </div>
+                <div class="g3">
+                  <div class="field">
+                    <label>Descripci&oacute;n</label>
+                    <textarea id="tarDescripcion" class="mueble-input" rows="2" placeholder="Detalle de lo que incluye esta tarea..."></textarea>
+                  </div>
+                  <div class="field">
+                    <label>Dificultad</label>
+                    <select id="tarDificultad" class="mueble-input">
+                      <option value="normal">Normal</option>
+                      <option value="alta">Alta</option>
+                      <option value="especializada">Especializada</option>
+                    </select>
+                  </div>
+                  <div class="field">
+                    <label>Requiere m&aacute;quina</label>
+                    <select id="tarMaquina" class="mueble-input">
+                      <option value="">Ninguna</option>
+                      <option value="sierra">Sierra</option>
+                      <option value="lijadora">Lijadora</option>
+                      <option value="ruteadora">Ruteadora</option>
+                      <option value="cnc">CNC</option>
+                      <option value="otra">Otra</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Subtotal</label>
+                  <div class="mat-precio-final" id="tarSubtotalDisplay">$ 0</div>
+                </div>
+              </div>
+
+              <div class="mat-lista" id="tareaLista">
+                <div class="mat-lista-titulo">
+                  <span>Tareas agregadas</span>
+                  <span class="mat-lista-count" id="tarListaCount">0 tareas</span>
+                </div>
+                <div id="tareaListaItems">
+                  <div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">A&uacute;n no hay tareas. Agrega la primera arriba.</div>
+                </div>
+                <div class="mat-lista-total" style="flex-direction:column;gap:4px;align-items:stretch;">
+                  <div style="display:flex;justify-content:space-between;"><span>Total horas estimadas</span><span id="tarTotalHorasDisplay" style="font-family:'JetBrains Mono',monospace;">0h</span></div>
+                  <div style="display:flex;justify-content:space-between;"><span>Total mano de obra</span><span id="tarTotalDisplay" style="font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--amber);">$ 0</span></div>
+                </div>
+              </div>
+
+              <hr style="border:none;border-top:1px solid var(--border);margin:16px 0;"/>
+
+              <div class="g2">
                 <div class="field">
                   <label>Costo Transporte</label>
                   <input type="number" id="costoTransporte" min="0" oninput="actualizarPreview(); calcularPrecioSugerido();"/>
                 </div>
-              </div>
-              <div class="field">
-                <label>Margen de Ganancia</label>
-                <div class="range-row">
-                  <input type="range" id="margenGanancia" min="0" max="100" value="40" oninput="actualizarMargenLabel(); actualizarPreview(); calcularPrecioSugerido();"/>
-                  <span class="range-val" id="margenGananciaLabel">40%</span>
+                <div class="field">
+                  <label>Margen de Ganancia</label>
+                  <div class="range-row">
+                    <input type="range" id="margenGanancia" min="0" max="100" value="40" oninput="actualizarMargenLabel(); actualizarPreview(); calcularPrecioSugerido();"/>
+                    <span class="range-val" id="margenGananciaLabel">40%</span>
+                  </div>
                 </div>
               </div>
               <div class="field">
@@ -400,8 +474,8 @@ function actualizarMargenLabel() {
 
 function calcularPrecioSugerido() {
   var mats = typeof calcularTotalMateriales === 'function' ? calcularTotalMateriales() : 0;
+  var mo = typeof calcularTotalManoObra === 'function' ? calcularTotalManoObra() : 0;
   var herrajes = parseFloat(document.getElementById('costoHerrajes').value) || 0;
-  var mo = parseFloat(document.getElementById('costoManoObra').value) || 0;
   var herr = parseFloat(document.getElementById('costoHerramientas').value) || 0;
   var transp = parseFloat(document.getElementById('costoTransporte').value) || 0;
   var sub = parseFloat(document.getElementById('costoSubcontratos').value) || 0;
@@ -530,6 +604,112 @@ function calcularTotalMateriales() {
   return total;
 }
 
+var listaTareas = [];
+
+function agregarTarea() {
+  var nom = document.getElementById('tarNombre').value.trim();
+  var col = document.getElementById('tarColaborador').value;
+  var horas = parseFloat(document.getElementById('tarHoras').value) || 0;
+  var tarifa = parseFloat(document.getElementById('tarTarifa').value) || 0;
+  var desc = document.getElementById('tarDescripcion').value.trim();
+  var dif = document.getElementById('tarDificultad').value;
+  var maq = document.getElementById('tarMaquina').value;
+
+  var ok = true;
+  if (!nom) { document.getElementById('tarNombre').classList.add('campo-error'); ok = false; }
+  if (!col) { document.getElementById('tarColaborador').classList.add('campo-error'); ok = false; }
+  if (horas <= 0) { document.getElementById('tarHoras').classList.add('campo-error'); ok = false; }
+  if (tarifa <= 0) { document.getElementById('tarTarifa').classList.add('campo-error'); ok = false; }
+  if (!ok) { mostrarToast('Completa los campos obligatorios'); return; }
+
+  listaTareas.push({
+    nombre: nom,
+    colaborador: col,
+    horas: horas,
+    tarifa: tarifa,
+    subtotal: horas * tarifa,
+    descripcion: desc,
+    dificultad: dif,
+    maquina: maq
+  });
+
+  document.getElementById('tarNombre').value = '';
+  document.getElementById('tarHoras').value = '';
+  document.getElementById('tarTarifa').value = '';
+  document.getElementById('tarDescripcion').value = '';
+  document.getElementById('tarSubtotalDisplay').textContent = '$ 0';
+  renderListaTareas();
+}
+
+function eliminarTarea(index) {
+  mostrarConfirm('Eliminar esta tarea de la lista?', function() {
+    listaTareas.splice(index, 1);
+    renderListaTareas();
+  });
+}
+
+function calcularSubtotalTarea() {
+  var h = parseFloat(document.getElementById('tarHoras').value) || 0;
+  var t = parseFloat(document.getElementById('tarTarifa').value) || 0;
+  document.getElementById('tarSubtotalDisplay').textContent = '$ ' + (h * t).toLocaleString('es-CO');
+}
+
+function renderListaTareas() {
+  var el = document.getElementById('tareaListaItems');
+  var countEl = document.getElementById('tarListaCount');
+  var totalEl = document.getElementById('tarTotalDisplay');
+  var horasEl = document.getElementById('tarTotalHorasDisplay');
+  if (!el) return;
+
+  countEl.textContent = listaTareas.length + ' tarea' + (listaTareas.length !== 1 ? 's' : '');
+
+  if (listaTareas.length === 0) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);font-size:13px;">Aún no hay tareas. Agrega la primera arriba.</div>';
+    totalEl.textContent = '$ 0';
+    horasEl.textContent = '0h';
+    calcularPrecioSugerido();
+    return;
+  }
+
+  var colLabels = { juan_perez: 'Juan P\u00e9rez', maria_lopez: 'Mar\u00eda L\u00f3pez', carlos_mora: 'Carlos Mora', andres_ruiz: 'Andr\u00e9s Ruiz', subcontrato: 'Subcontrato' };
+  var difLabels = { normal: 'Normal', alta: 'Alta', especializada: 'Especializada' };
+  var maqLabels = { sierra: 'Sierra', lijadora: 'Lijadora', ruteadora: 'Ruteadora', cnc: 'CNC', otra: 'Otra' };
+
+  var html = '';
+  var totalHoras = 0;
+  var totalMonto = 0;
+  for (var i = 0; i < listaTareas.length; i++) {
+    var t = listaTareas[i];
+    totalHoras += t.horas;
+    totalMonto += t.subtotal;
+    html += '<div class="mat-item">';
+    html += '<div class="mat-item-encabezado">';
+    html += '<span class="mat-item-num">#' + (i + 1) + '</span>';
+    html += '<span class="mat-item-nombre">' + esc(t.nombre) + '</span>';
+    html += '<button type="button" class="mat-item-del" onclick="eliminarTarea(' + i + ')" title="Eliminar tarea">&times;</button>';
+    html += '</div>';
+    html += '<div class="mat-item-meta">' + (colLabels[t.colaborador] || t.colaborador) + ' &middot; ' + t.horas + 'h &times; $ ' + t.tarifa.toLocaleString('es-CO') + ' = <strong>$ ' + t.subtotal.toLocaleString('es-CO') + '</strong></div>';
+    var extras = [];
+    if (t.maquina && maqLabels[t.maquina]) extras.push('M\u00e1quina: ' + maqLabels[t.maquina]);
+    if (t.dificultad && t.dificultad !== 'normal') extras.push('Dificultad: ' + difLabels[t.dificultad]);
+    if (extras.length) html += '<div class="mat-item-obs">' + extras.join(' &middot; ') + '</div>';
+    if (t.descripcion) html += '<div class="mat-item-obs">' + esc(t.descripcion) + '</div>';
+    html += '</div>';
+  }
+  el.innerHTML = html;
+  totalEl.textContent = '$ ' + totalMonto.toLocaleString('es-CO');
+  horasEl.textContent = totalHoras + 'h';
+  calcularPrecioSugerido();
+}
+
+function calcularTotalManoObra() {
+  var total = 0;
+  for (var i = 0; i < listaTareas.length; i++) {
+    total += listaTareas[i].subtotal;
+  }
+  return total;
+}
+
 function actualizarPreview() {
   if (typeof CotizacionView !== 'undefined' && CotizacionView.recolectarDatosFormulario) {
     var datos = CotizacionView.recolectarDatosFormulario();
@@ -598,8 +778,11 @@ function limpiarFormulario() {
   document.getElementById('fechaCotizacion').value = new Date().toISOString().split('T')[0];
   document.getElementById('precioSugerido').value = '';
   listaMateriales = [];
+  listaTareas = [];
   renderListaMateriales();
+  renderListaTareas();
   document.getElementById('matPrecioFinalDisplay').textContent = '$ 0';
+  document.getElementById('tarSubtotalDisplay').textContent = '$ 0';
   cambiarTab('cliente');
   if (cs.materiales && cs.materiales.items && cs.materiales.items.length > 0) {
     listaMateriales = JSON.parse(JSON.stringify(cs.materiales.items));
@@ -680,8 +863,14 @@ function cargarCotizacionExistente(id) {
   if (e.cantidadPiezas) document.getElementById('cantidadPiezas').value = e.cantidadPiezas;
   if (e.nivelDificultad) seleccionarNivel(e.nivelDificultad);
 
-  if (cs.materiales) document.getElementById('costoMateriales').value = cs.materiales;
-  if (cs.manoObra) document.getElementById('costoManoObra').value = cs.manoObra;
+  if (cs.materiales && typeof cs.materiales === 'object' && cs.materiales.items) {
+    listaMateriales = JSON.parse(JSON.stringify(cs.materiales.items));
+    renderListaMateriales();
+  }
+  if (cs.manoObra && typeof cs.manoObra === 'object' && cs.manoObra.items) {
+    listaTareas = JSON.parse(JSON.stringify(cs.manoObra.items));
+    renderListaTareas();
+  }
   if (cs.herrajes) document.getElementById('costoHerrajes').value = cs.herrajes;
   if (cs.herramientas) document.getElementById('costoHerramientas').value = cs.herramientas;
   if (cs.transporte) document.getElementById('costoTransporte').value = cs.transporte;

@@ -254,4 +254,9 @@
 .mat-lista-total span:last-child{font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--amber);}
 .campo-error{border-color:var(--danger)!important;box-shadow:0 0 0 1px var(--danger);}
 
+/* ── Tareas / Mano de obra (Tab 4) ── */
+.mat-lista-total.two-lines{flex-direction:column;gap:4px;align-items:stretch;}
+.mat-lista-total .total-line{display:flex;justify-content:space-between;align-items:center;}
+.mat-lista-total .total-line .total-val{font-family:'JetBrains Mono',monospace;color:var(--amber);font-size:16px;}
+
 

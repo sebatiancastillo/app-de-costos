@@ -201,7 +201,10 @@ class CotizacionModel {
           items: datos.materialesItems || [],
           total: datos.materialesTotal || datos.costoMateriales || 0
         },
-        manoObra: datos.costoManoObra || 0,
+        manoObra: {
+          items: datos.manoObraItems || [],
+          total: datos.manoObraTotal || datos.costoManoObra || 0
+        },
         herrajes: datos.costoHerrajes || 0,
         herramientas: datos.costoHerramientas || 0,
         transporte: datos.costoTransporte || 0,
@@ -238,7 +241,8 @@ class CotizacionModel {
   static calcularPrecioFinal(costosObj, margen) {
     if (!costosObj) return 0;
     const mates = typeof costosObj.materiales === 'object' ? (costosObj.materiales.total || 0) : (costosObj.materiales || 0);
-    const suma = mates + (costosObj.manoObra || 0)
+    const mo = typeof costosObj.manoObra === 'object' ? (costosObj.manoObra.total || 0) : (costosObj.manoObra || 0);
+    const suma = mates + mo
       + (costosObj.herramientas || 0) + (costosObj.transporte || 0)
       + (costosObj.subcontratos || 0);
     const m = margen != null ? margen : 40;
@@ -266,7 +270,7 @@ class CotizacionModel {
       ancho: c.ancho || 0,
       alto: c.alto || 0,
       costoMateriales: typeof c.costos?.materiales === 'object' ? (c.costos.materiales.total || 0) : (c.costos?.materiales || 0),
-      costoManoObra: c.costos?.manoObra || 0,
+      costoManoObra: typeof c.costos?.manoObra === 'object' ? (c.costos.manoObra.total || 0) : (c.costos?.manoObra || 0),
       margenGanancia: c.margen || 40,
       tiempoEstimadoDias: c.tiempoEntrega || 0,
       recordatorios: c.recordatorios || [],
